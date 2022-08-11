@@ -1,7 +1,8 @@
 
 **Step 1:Install Docker** 
-	- Installation [Link](https://docs.docker.com/get-docker/)
-	- Choose installer for Mac/Windows/Linux <br>
+ - Installation [Link](https://docs.docker.com/get-docker/)
+ - Choose installer for Mac/Windows/Linux <br>
+ 
 **Step 2: Install docker-compose** 
 By default it's already installed with docker, check the attached link incase if further setup is required - [Link](https://docs.docker.com/compose/install/) <br>
 Create  new directory (let's say `airflow-docker`)
@@ -13,8 +14,10 @@ Run below command to download the docker-compose file in `airflow-docker` folder
 ```sh
 curl -LfO “http://apache-airflow-docs.s3-website.eu-central-1.amazonaws.com/docs/apache-airflow/latest/docker-compose.yaml”
 ```
+
 **Step 3:Create Directories**
 Open `airflow-docker` folder (having **.yaml** file) in code editor (e.g. VSCode) and create three directories **dags/logs/plugins** <br>
+
 <ins>**For Linux**</ins>
 ```sh
 mkdir ./dags ./logs ./plugins
@@ -25,6 +28,7 @@ mkdir dags logs plugins
 ```
 **Step 4:Setting the Airflow user or setup environment variables**
 Needs to export an environment variable to ensure that the folder on your host machine and the folders within the containers share the same permissions <br>
+
 <ins>**For Linux**</ins>
 ```sh
 echo -e "AIRFLOW_UID=**$(**id -u**)**\nAIRFLOW_GID=0" > .env
@@ -34,7 +38,6 @@ echo -e "AIRFLOW_UID=**$(**id -u**)**\nAIRFLOW_GID=0" > .env
  - Add **AIRFLOW_UID=50000** and **AIRFLOW_GID=0** in
    **.env** file
 
-	
 **Step 5: Start docker**
 Start docker if installed first time in Windows <br>
 
