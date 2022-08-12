@@ -48,16 +48,16 @@ docker-compose up airflow-init
 ```
 <ins>**Resolving Errors**</ins>
 
-**Error-1**  
+**Error_1**  
 ![Airflow Initialization Error-1](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/images/airflow_initilization_error.png)
 
-**Solution-1**  
+**Solution_1**  
 Follow the link to resolve - [Link](https://stackoverflow.com/questions/58663920/can-i-run-docker-desktop-on-windows-without-admin-privileges#:~:text=If%20your%20admin%20account%20is,the%20changes%20to%20take%20effect.) <br>
 
-**Error-2**  
+**Error_2**  
 ![Airflow Initialization Error-2](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/images/airflow_initilization_error_2.png)
 
-**Solution-1**  
+**Solution_2**  
 ![Airflow Initialization Error-2 Solution](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/images/airflow_initilization_error_2_solution.png)
 
 ### Step 7: Start Airflow Services  
