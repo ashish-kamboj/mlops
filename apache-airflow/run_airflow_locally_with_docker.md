@@ -58,6 +58,7 @@ Follow the link to resolve - [Link](https://stackoverflow.com/questions/58663920
 ![Airflow Initialization Error-2](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/images/airflow_initilization_error_2.png)
 
 **Solution_2**  
+Change the `AIRFLOW_IMAGE`, in this case **apache/airflow:2.4.0.dev0** to **apache/airflow:2.3.3**  
 ![Airflow Initialization Error-2 Solution](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/images/airflow_initilization_error_2_solution.png)
 
 ### Step 7: Start Airflow Services  
