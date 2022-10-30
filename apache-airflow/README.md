@@ -5,6 +5,7 @@
  - DAGs for executing python scripts from s3
  
  <br>
+ 
  |Details    |
  |:----------|
  |[Airflow DAG Examples](https://github.com/ashish-kamboj/mlops/tree/main/apache-airflow/example-dags)|
