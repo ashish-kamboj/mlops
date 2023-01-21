@@ -7,4 +7,5 @@
 |s3              |[Get latest file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/get_latest_file_from_s3.py)|        |       |
 |s3              |[Put data as a pickle file in s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/upload_data_as_pickle_to_s3_1.py)|Using Object.put()  |    |
 |s3              |[Put data as a pickle file in s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/upload_data_as_pickle_to_s3_2.py)|Using Client.put_object()  |    |
+|s3              |[Read csv file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/read_csv_file_from_s3.py)|     |       |
 |Lambda          |           |          |              |
