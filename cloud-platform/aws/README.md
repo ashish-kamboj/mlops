@@ -10,5 +10,6 @@
 |s3              |[Read csv file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/read_csv_file_from_s3.py)|     |       |
 |s3              |[Read Excel(xlsx) file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/read_excel_file_from_s3.py)|      |        |
 |s3              |[Read pickle(pkl) file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/read_pickle_file_from_s3.py)|      |          |
+|s3              |[Save dataframe as csv to s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/save_dataframe_as_csv_to_s3.py)|      |          |
 |s3              |[Upload file from local to s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/upload_file_from_local_to_s3.py)|      |          |
 |Lambda          |           |          |              |
