@@ -5,6 +5,7 @@
 |                |[Get AWS access and secret key](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/get_aws_access_and_secret_key.py)|   |     |
 |CodePipeline, ECS, Lambda|[Create ECS task definition Using Lambda for CodePipeline](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/create_ecs_task_definition_using_lambda_for_codepipeline.py)|1. Creates Log Group for ECS task definition in Cloudwatch <br> 2. Creates ECS task definition <br> 3. Invokes another lambda, which triggers ECS task <br> 4. Send Success and Failure notification to AWS Codepipeline   |   |
 |DynamoDB        |[Get data from DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/get_data_from_dynamodb_table.py)|   |    |
+|ECS             |[Invoke ECS container using Lambda](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/invoke_ecs_container_using_lambda.py)| | |
 |s3              |[Checking whether a file is present or not in s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/check_file_exists_in_s3.py)       |          |              |
 |s3              |[Delete file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/delete_file_from_s3.py)|   |   |
 |s3              |[Delete all objects from s3 folder](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/delete_all_objects_from_s3_folder.py)|   |   |
