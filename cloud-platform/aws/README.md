@@ -5,6 +5,7 @@
 |                |[Get AWS access and secret key](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/get_aws_access_and_secret_key.py)|   |     |
 |CodePipeline, ECS, Lambda|[Create ECS task definition Using Lambda for CodePipeline](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/create_ecs_task_definition_using_lambda_for_codepipeline.py)|1. Creates Log Group for ECS task definition in Cloudwatch <br> 2. Creates ECS task definition <br> 3. Invokes another lambda, which triggers ECS task <br> 4. Send Success and Failure notification to AWS Codepipeline   |   |
 |DynamoDB        |[Create table replica](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/create_dynamodb_table_replica_in_same_region.py)|In same region   |    |
+|DynamoDB        |[Delete records from DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/delete_records_from_dynamodb_table.py)|Delete multiple records   |    |
 |DynamoDB        |[Get data from DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/get_data_from_dynamodb_table.py)|   |    |
 |DynamoDB        |[Insert data from one table to another table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/insert_data_from_one_dynamodb_to_another_dynamodb_table.py)|In same region   |   |
 |ECS             |[Invoke ECS container using Lambda](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/invoke_ecs_container_using_lambda.py)| | |
