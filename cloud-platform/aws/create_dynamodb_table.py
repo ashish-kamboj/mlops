@@ -1,6 +1,5 @@
 ## Importing Libraries
 import boto3
-from boto3.dynamodb.types import TypeDeserializer
 
 ## Constants
 AWS_ACCESS_KEY_ID = 'access_key_id'
@@ -12,7 +11,7 @@ region_name = 'us-east-1' # region where the table is located
 table_name = 'table_name'
 
 ## Initialize DynamoDB client
-dynamodb = boto3.client('dynamodb', 
+dynamodb = boto3.resource('dynamodb', 
                         region_name=region_name, 
                         aws_access_key_id=AWS_ACCESS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
@@ -22,25 +21,21 @@ table = dynamodb.create_table(
     TableName=table_name,
     KeySchema=[
         {
-            'AttributeName': 'id',
+            'AttributeName': 'partition-key', #e.g. 'id'
             'KeyType': 'HASH'
+        },
+        {
+            'AttributeName': 'sort-key', #e.g. 'updated_date'
+            'KeyType': 'RANGE'
         }
     ],
     AttributeDefinitions=[
         {
-            'AttributeName': 'id',
+            'AttributeName': 'partition-key',
             'AttributeType': 'N'
         },
         {
-            'AttributeName': 'name',
-            'AttributeType': 'S'
-        },
-        {
-            'AttributeName': 'details_updated',
-            'AttributeType': 'BOOL'
-        },
-        {
-            'AttributeName': 'updated_date',
+            'AttributeName': 'sort-key',
             'AttributeType': 'S'
         }
     ],
