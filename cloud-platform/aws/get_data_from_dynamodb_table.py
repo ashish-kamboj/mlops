@@ -9,7 +9,7 @@ AWS_SECRET_ACCESS_KEY = 'secret_access_key'
 table_name = 'table_name'
 
 ## Creating s3 resource object
-dynamodb_client= boto3.client(
+dynamodb_client= boto3.resource(
                 'dynamodb',
                 region_name='us-east-1',
                 aws_access_key_id=AWS_ACCESS_KEY_ID,
