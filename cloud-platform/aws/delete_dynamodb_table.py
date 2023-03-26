@@ -11,7 +11,7 @@ region_name = 'us-east-1' # region where the table is located
 table_name = 'table_name'
 
 ## Initialize DynamoDB client
-dynamodb = boto3.client('dynamodb', 
+dynamodb = boto3.resource('dynamodb', 
                         region_name=region_name, 
                         aws_access_key_id=AWS_ACCESS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
