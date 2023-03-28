@@ -10,6 +10,7 @@
 |DynamoDB        |[Delete DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/delete_dynamodb_table.py)|  |    |
 |DynamoDB        |[Get data from DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/get_data_from_dynamodb_table.py)|   |    |
 |DynamoDB        |[Insert data from one table to another table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/insert_data_from_one_dynamodb_to_another_dynamodb_table.py)|In same region   |   |
+|DynamoDB        |[Insert records in DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/insert_records_to_dynamodb_table.py)|Can specify additional columns, accordingly the table structure will modify   |   |
 |ECS             |[Invoke ECS container using Lambda](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/invoke_ecs_container_using_lambda.py)| | |
 |s3              |[Checking whether a file is present or not in s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/check_file_exists_in_s3.py)       |          |              |
 |s3              |[Delete file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/delete_file_from_s3.py)|   |   |
