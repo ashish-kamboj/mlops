@@ -28,3 +28,4 @@
 |s3              |[Upload file from local to s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/upload_file_from_local_to_s3.py)|      |          |
 |s3              |[Upload list of files from local to s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/upload_list_of_files_from_local_to_s3.py)|      |          |
 |s3, Lambda      |[Download and Execute python file from s3 using Lambda](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/download_and_execute_python_file_from_s3_using_lambda.py)|         |          |
+|SES             |[Send Email notification](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/send_email_notification_using_ses.py)|Amazon SES is case-sensitive|  |
