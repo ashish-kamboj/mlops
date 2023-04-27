@@ -32,4 +32,5 @@ ECS              |[Run containerized python script on ECS cluster](https://githu
 |Sagemaker       |[Create Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/create_sagemaker_notebook_instance.py)|   |    |
 |Sagemaker       |[Start Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/start_sagemaker_notebook_instance.py)|   |    |
 |Sagemaker       |[Stop Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/stop_sagemaker_notebook_instance.py)|   |    |
+|Sagemaker       |[Describe Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/describe_sagemaker_notebook_instance.py)|Detail about notebook instance   |    |
 |SES             |[Send Email notification](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/send_email_notification_using_ses.py)|Amazon SES is case-sensitive|  |
