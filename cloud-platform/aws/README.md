@@ -30,7 +30,8 @@ ECS              |[Run containerized python script on ECS cluster](https://githu
 |s3              |[Upload list of files from local to s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/upload_list_of_files_from_local_to_s3.py)|      |          |
 |s3, Lambda      |[Download and Execute python file from s3 using Lambda](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/download_and_execute_python_file_from_s3_using_lambda.py)|         |          |
 |Sagemaker       |[Create Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/create_sagemaker_notebook_instance.py)|   |    |
+|Sagemaker       |[Describe Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/describe_sagemaker_notebook_instance.py)|Detail about notebook instance   |    |
+|Sagemaker       |[List Notebook Instances](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/list_sagemaker_notebook_instances.py)|List all the available notebook instances   |   |
 |Sagemaker       |[Start Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/start_sagemaker_notebook_instance.py)|   |    |
 |Sagemaker       |[Stop Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/stop_sagemaker_notebook_instance.py)|   |    |
-|Sagemaker       |[Describe Notebook Instance](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/describe_sagemaker_notebook_instance.py)|Detail about notebook instance   |    |
 |SES             |[Send Email notification](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/send_email_notification_using_ses.py)|Amazon SES is case-sensitive|  |
