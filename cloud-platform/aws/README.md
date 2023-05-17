@@ -38,4 +38,5 @@ ECS              |[Run containerized python script on ECS cluster](https://githu
 |Sagemaker       |[List training Jobs](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/list_sagemaker_training_jobs.py)|   |    |
 |Sagemaker       |[Describe training Job](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/describe_sagemaker_training_job.py)|   |    |
 |Sagemaker       |[List Models](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/list_sagemaker_models.py)|   |    |
+|Sagemaker       |[Describe Model](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/describe_sagemaker_model.py)|   |    |
 |SES             |[Send Email notification](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/send_email_notification_using_ses.py)|Amazon SES is case-sensitive|  |
