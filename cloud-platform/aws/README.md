@@ -11,6 +11,7 @@
 |DynamoDB        |[Get data from DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/get_data_from_dynamodb_table.py)|   |    |
 |DynamoDB        |[Insert data from one table to another table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/insert_data_from_one_dynamodb_to_another_dynamodb_table.py)|In same region   |   |
 |DynamoDB        |[Insert records in DynamoDB table](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/insert_records_to_dynamodb_table.py)|Can specify additional columns, accordingly the table structure will modify   |   |
+|ECR             |[Remove older images](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/remove_older_images_from_ecr.py)|Keep the image with tag **latest**  |   |
 |Lambda, ECS     |[Invoke ECS container using Lambda](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/invoke_ecs_container_using_lambda.py)| | |
 ECS              |[Run containerized python script on ECS cluster](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/run_containerized_python_script_on_ecs_cluster.py)|  |  |
 |s3              |[Checking whether a file is present or not in s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/check_file_exists_in_s3.py)       |          |              |
