@@ -20,6 +20,8 @@ ECS              |[Run containerized python script on ECS cluster](https://githu
 |s3              |[Get latest file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/get_latest_file_from_s3.py)|        |       |
 |s3              |[Get latest file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/get_latest_file_from_s3_2.py)|Using Pagination as directory has over 1000 objects|   |
 |s3              |[Get latest file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/get_latest_file_from_s3_3.py)|Using Pagination as directory has over 1000 objects along with file pattern filter|   |
+|s3              |[Get list of subfolder from s3 file paths](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/get_list_of_subfolders_from_s3.py)|Assuming subfolder at specific position|    |
+|s3              |[Get presigned url of s3 obkect](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/get_presigned_url_of_s3_object.py)|    |    |
 |s3              |[Put data as a pickle file in s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/upload_data_as_pickle_to_s3_1.py)|Using Object.put()  |    |
 |s3              |[Put data as a pickle file in s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/upload_data_as_pickle_to_s3_2.py)|Using Client.put_object()  |    |
 |s3              |[Read csv file from s3](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/aws/scripts/read_csv_file_from_s3.py)|     |       |
