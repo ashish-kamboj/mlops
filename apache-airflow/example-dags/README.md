@@ -3,6 +3,7 @@
 |Airflow Operators                                                                                         |Detail            |Version|References|
 |:---------------------------------------------------------------------------------------------------------|:-----------------|:------|----------|
 |[ECSOperator](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/example-dags/ECSOperator.py)|                  |1.10.11|          |
+|[EmailOperator](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/example-dags/emailoperator.py)|with TriggerRule|1.10.11|        |
 |MSTeamsWebhookOperator|         |         |[Link](https://code.mendhak.com/Airflow-MS-Teams-Operator/)|
 |[TriggerDagRunOperator](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/example-dags/TriggerDagRunOperator_with_parameters.py)|With Parameters|1.10.11 |       |
 |[TriggerDagRunOperator](https://github.com/ashish-kamboj/mlops/blob/main/apache-airflow/example-dags/TriggerDagRunOperator_with_parameters_v1.10.py)|With Parameters|1.10.11 |      |
