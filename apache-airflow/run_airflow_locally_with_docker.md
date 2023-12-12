@@ -74,3 +74,8 @@ docker ps
 
 ### Step 8:Access Airflow UI  
 Open Airflow UI - [http://localhost:8080](http://localhost:8080) with Username/Password = airflow/airflow
+
+<br></br>
+
+  > **_References:_**
+  - [Setting Up Airflow With Docker On WSL](https://medium.com/@ericfflynn/my-journey-with-apache-airflow-d7d364fc84ba)
