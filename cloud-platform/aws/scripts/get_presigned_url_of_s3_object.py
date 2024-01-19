@@ -5,11 +5,11 @@ import boto3
 AWS_ACCESS_KEY_ID = 'access_key_id'
 AWS_SECRET_ACCESS_KEY = 'secret_access_key'
 
-## Creating dynamodb resource object
-s3 = boto3.resource('s3',
+## Creating dynamodb client object
+s3_client = boto3.client('s3',
                     region_name='us-east-1',
                     aws_access_key_id=AWS_ACCESS_KEY_ID,
-                    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+                    aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
 # Specify the S3 bucket name and object key (path)
 BUCKET_NAME = "some-bucket-name"
