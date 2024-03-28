@@ -6,7 +6,7 @@
 |File Share     |[Get File Share SAS url](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/azure/scripts/fileshare_sas_url.py)  |Get public url to access file share object for specified time period|   |
 |Document Intelligence|[Extract text from document](https://github.com/ashish-kamboj/mlops/blob/main/cloud-platform/azure/scripts/extract_text_from_document_using_document_intelligence.py)|Extract text from the documents (pdf) present in AWS s3
 
-
+<br>
 ### CI/CD Pipeline setup and Run Unit test using Azure DevOps
 [YAML script](https://github.com/ashish-kamboj/mlops/cloud-platform/azure/scripts/azure-pipeline.yaml) to create CI Pipeline and run unit test cases on pull request using Azure DevOps. Also, find the yaml script explanation [here](https://github.com/ashish-kamboj/mlops/cloud-platform/azure/scripts/azure-pipeline-yaml-explanation.txt)
 
