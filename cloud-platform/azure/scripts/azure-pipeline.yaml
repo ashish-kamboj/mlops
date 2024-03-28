@@ -1,0 +1,45 @@
+# Trigger pipeline only on pull request creation/update
+trigger:
+  - pullrequests
+
+# Use Ubuntu with a suitable Python environment
+pool:
+  vmImage: 'ubuntu-latest'
+
+# Define variables (including isDevBranch)
+variables:
+  # Check if the target branch is the development branch
+  isDevBranch: $[ eq(variables['System.PullRequestTargetBranch'], 'refs/heads/dev') ]
+
+# Define a single stage for building and testing
+stages:
+- stage: Build_and_Test
+
+  jobs:
+  - job: Run_Tests
+    # Only run this job if the previous stage succeeds (if any)
+    condition: succeeded()
+    # Only run this job if the target branch is the development branch (using the variable)
+    condition: eq(variables.isDevBranch, true)
+
+    steps:
+    - script: |
+        # Checkout the code from the Git repository
+        git checkout .
+
+        # Install dependencies (replace with your actual requirements file)
+        pip install -r requirements.txt
+      displayName: 'Install dependencies'
+
+    - script: |
+        # Run tests with pytest and generate JUnit XML report
+        pytest --junitxml=test_results.xml
+      displayName: 'Run unit tests'
+
+    - task: PublishTestResults@2  # Azure DevOps task to publish test results
+      inputs:
+        testResultsFiles: '**/test_results.xml'  # Path to the generated JUnit XML report
+        testRunTitle: 'PR $(PullRequest.PullRequestId) - Unit Tests (Dev Branch)'  # Customize title
+        platform: '$(Build.Platform)'  # Optional: Platform on which tests were run
+        configuration: '$(Build.Configuration)'  # Optional: Build configuration
+      displayName: 'Publish Test result'

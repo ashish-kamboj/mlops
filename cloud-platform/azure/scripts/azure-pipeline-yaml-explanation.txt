@@ -1,0 +1,31 @@
+1. Trigger:
+	trigger: pullrequests - This line specifies that the pipeline should be triggered only when a pull request is created or updated.
+2. Pool:
+	pool: vmImage: 'ubuntu-latest' - This line defines the virtual machine image (VM) to use for running the pipeline. In this case, it uses a ubuntu-latest image. Ensure this image has a suitable Python environment for your project.
+3. Stages:
+	stages: Build_and_Test - This line defines a single stage named Build_and_Test in the pipeline. Stages are used to group related jobs.
+4. Jobs:
+	jobs: Run_Tests - This line defines a single job named Run_Tests within the Build_and_Test stage. Jobs are the actual units of work performed in the pipeline.
+5. Condition:
+	condition: succeeded() - This line ensures that the Run_Tests job executes only if the previous stage (if any) has completed successfully.
+6. Steps:
+	- The steps section defines the commands that will be executed within the Run_Tests job. Each line represents a step:
+		- script: | - This defines a multi-line script block.
+			- git checkout . - This command checks out the code from the Git repository into the working directory. It's generally not mandatory if your pipeline fetches and clones the code correctly before the job starts. However, it can be useful in specific scenarios (explained earlier in Response B).
+			- pip install -r requirements.txt - This command installs the Python dependencies listed in the requirements.txt file. Replace this with the path to your actual requirements file.
+			- pytest --junitxml=test_results.xml - This command executes the unit tests using pytest. Here's what it does:
+			- pytest: This is the pytest command-line executable.
+			- --junitxml=test_results.xml: This option tells pytest to generate a JUnit XML report named test_results.xml. This report is used for visualization in Azure DevOps.
+	- task: PublishTestResults@2 - This line defines a task that uses the built-in Azure DevOps task PublishTestResults@2 to publish the generated JUnit XML report (test_results.xml) for viewing.
+		- inputs: - This section defines the inputs for the PublishTestResults@2 task:
+		- testResultsFiles: '**/test_results.xml': This specifies the path to the JUnit XML report.
+		- testRunTitle: 'PR $(PullRequest.PullRequestId) - Unit Tests (Dev Branch)': This customizes the title of the test run in Azure DevOps to include the PR ID and branch name (Dev Branch).
+		- platform: '$(Build.Platform)': This is an optional input to specify the platform on which the tests were run (provided by the pipeline).
+		- configuration: '$(Build.Configuration)': This is another optional input to specify the build configuration (provided by the pipeline).
+		
+7. Variables Section:
+	- A new variables section is added.
+	- The isDevBranch variable is defined using a conditional expression. It checks if the value of the System.PullRequestTargetBranch variable (which stores the target branch of the PR) is equal to refs/heads/dev (replace with your actual development branch name if different).
+8. Job Condition:
+	- The condition for the Run_Tests job is updated to use the isDevBranch variable:
+		- condition: eq(variables.isDevBranch, true) - This ensures that the job runs only if the isDevBranch variable is true, indicating the target branch is the development branch.
