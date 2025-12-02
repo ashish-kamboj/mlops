@@ -1,0 +1,33 @@
+#numpy==2.3.4
+numpy==1.26.4
+pandas==2.3.3
+scikit-learn==1.7.2
+matplotlib==3.10.7
+seaborn==0.13.2
+plotly==5.24.1
+pyyaml==6.0.3
+pyarrow==20.0.0
+
+# Databricks specific (auto-installed in Databricks runtime)
+# mlflow>=2.8.0
+# pyspark>=3.4.0
+# databricks-feature-store>=0.16.0
+
+# For local MLflow
+mlflow==3.0.1
+
+# Model interpretation
+shap==0.49.1
+
+# Gradient Boosting
+xgboost==2.1.0
+
+# Monitoring
+#evidently==0.7.16
+evidently==0.6.1
+
+# Utilities
+python-dateutil==2.9.0
+tqdm==4.67.1
+joblib==1.5.2
+papermill==2.5.0

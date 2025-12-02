@@ -1,0 +1,281 @@
+# ============================================================================
+# Configuration File for Next Best Product Recommendation MLOps Pipeline
+# ============================================================================
+
+# Environment Settings
+environment:
+  mode: "databricks"  # Options: "local" or "databricks"
+  
+# Data Source Configuration
+data_source:
+  type: "unity_catalog"  # Options: "unity_catalog" or "csv"
+  
+  # Unity Catalog Configuration (for Databricks)
+  unity_catalog:
+    catalog: "datafabric_catalog"
+    schema: "customer_hc_silver"
+    tables:
+      #address: "address"
+      party: "party"
+      customer: "customer"
+      customer_account: "customer_account"
+      banking_product: "banking_product"
+      channel: "channel"
+      transaction: "transaction"
+      #communication: "communication"
+      #document: "document"
+    
+    # Output paths for Unity Catalog
+    output_schema: "ml_outputs"
+    feature_table: "customer_features"
+    predictions_table: "product_recommendations"
+    monitoring_table: "model_monitoring_metrics"
+  
+  # CSV Configuration (for local development)
+  csv:
+    input_path: "./data/raw"
+    output_path: "./data/processed"
+    tables:
+      address: "address.csv"
+      party: "party.csv"
+      customer: "customer.csv"
+      customer_account: "customer_account.csv"
+      banking_product: "banking_product.csv"
+      channel: "channel.csv"
+      transaction: "transaction.csv"
+      communication: "communication.csv"
+      document: "document.csv"
+
+# Feature Store Configuration
+feature_store:
+  enabled: true  # Set to false for local mode without Databricks Feature Store
+  database_name: "datafabric_catalog.customer_hc_silver"
+  table_name: "customer_product_features_fs"
+  primary_keys: ["customer_id"]
+  timestamp_key: "feature_timestamp"
+  description: "Customer features for next best product recommendation"
+
+# MLflow Configuration
+mlflow:
+  # Databricks Mode
+  databricks:
+    tracking_uri: "databricks"
+    experiment_name: "/Users/ashish.kamboj@tigeranalytics.com/next-best-product-recommendation"
+    model_registry_uri: "databricks-uc"
+    registered_model_name: "datafabric_catalog.customer_hc_silver.next_best_product_model"
+  
+  # Local Mode
+  local:
+    tracking_uri: "./mlruns"  # workspace root /mlruns (not outputs/mlruns)
+    experiment_name: "next_best_product_local"
+    registered_model_name: "next_best_product_model"
+  
+  # Common MLflow Settings
+  run_name_prefix: "next_best_product"
+  tags:
+    project: "home_credit_hyperpersonalization"
+    use_case: "next_best_product"
+    team: "data_science"
+    version: "v1.0"
+
+# Model Configuration
+model:
+  target_variable: "next_product_id"
+  model_type: "classification"  # Options: "classification", "regression"
+  
+  # Algorithm Selection
+  algorithm: "xgboost"  # Options: "random_forest", "logistic_regression", "xgboost", "lightgbm"
+  
+  # Model Hyperparameters (can be overridden during training)
+  hyperparameters:
+    random_forest:
+      n_estimators: 100
+      max_depth: 10
+      min_samples_split: 5
+      min_samples_leaf: 2
+      random_state: 42
+      n_jobs: -1
+    
+    logistic_regression:
+      max_iter: 1000
+      random_state: 42
+      multi_class: "multinomial"
+      solver: "lbfgs"
+    
+    xgboost:
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8
+      colsample_bytree: 0.8
+      objective: "multi:softprob"
+      random_state: 42
+      n_jobs: -1
+      eval_metric: "mlogloss"
+  
+  # Train-Test Split
+  train_test_split:
+    test_size: 0.2
+    random_state: 42
+    stratify: true
+  
+  # Model Evaluation Metrics
+  evaluation_metrics:
+    - "accuracy"
+    - "precision_weighted"
+    - "recall_weighted"
+    - "f1_weighted"
+    - "roc_auc_ovr"
+
+# Feature Engineering Configuration
+feature_engineering:
+  # Date for feature calculation (can be set dynamically)
+  # Set to 2 years ago to allow sufficient time for post-reference transactions
+  # This ensures 80% of customers will have "next product" purchases for training
+  reference_date: "2023-02-01"
+  
+  # Data split ratio: 80% of customers should have targets (for training), 20% without (for inference)
+  training_data_ratio: 0.80
+  
+  # Lookback periods for aggregations (in days)
+  lookback_periods:
+    short_term: 30
+    medium_term: 90
+    long_term: 180
+  
+  # Feature categories to generate
+  feature_categories:
+    demographic: true
+    account: true
+    transaction: true
+    communication: true
+    behavioral: true
+    temporal: true
+  
+  # Handle missing values
+  missing_value_strategy:
+    numeric: "median"  # Options: "mean", "median", "zero"
+    categorical: "mode"  # Options: "mode", "unknown"
+
+# EDA Configuration
+eda:
+  output_path: "./outputs/eda"
+  generate_plots: true
+  save_statistics: true
+  plot_format: "png"  # Options: "png", "html"
+  
+  # Analysis types
+  analyses:
+    univariate: true
+    bivariate: true
+    correlation: true
+    distribution: true
+    outliers: true
+    missing_values: true
+
+# Deployment Configuration
+deployment:
+  # Model serving endpoint
+  endpoint_name: "next-best-product-endpoint"
+  
+  # Databricks serving configuration
+  databricks_serving:
+    workload_size: "Small"  # Options: "Small", "Medium", "Large"
+    scale_to_zero_enabled: true
+    min_instances: 0
+    max_instances: 3
+  
+  # Batch inference
+  batch_inference:
+    schedule: "daily"  # Options: "daily", "weekly", "monthly"
+    output_format: "delta"  # Options: "delta", "parquet", "csv"
+    top_k_recommendations: 3  # Number of products to recommend per customer
+
+  # --- Added governed deployment workflow settings ---
+  # If true, model will remain in STAGING after gating until a manual approval step promotes it.
+  require_manual_approval: true
+
+  # Metric thresholds for automatic gating. Any metric below threshold fails the gate.
+  # Set to null (or remove) to disable a specific metric gate.
+  gating_thresholds:
+    accuracy: 0.10
+    f1_weighted: 0.10
+    top_3_accuracy: 0.10
+
+  # Tags applied to both registered model and specific version during deployment.
+  tags:
+    owner: "mlops_team"
+    domain: "next_best_product"
+    risk_level: "medium"
+    compliance: "internal"
+
+  # Descriptions stored in registry (registered model + version).
+  model_descriptions:
+    registered: "Next Best Product classifier for cross-sell sequencing. Generates ranked product recommendations."
+    version_prefix: "Trained with current feature set & includes Top-K metrics"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  output_path: "./outputs/monitoring"
+  
+  # Monitoring frequency
+  schedule: "weekly"  # Options: "daily", "weekly", "monthly"
+  
+  # Drift detection thresholds
+  drift_thresholds:
+    feature_drift: 0.1  # Kolmogorov-Smirnov test threshold
+    prediction_drift: 0.15
+    data_quality_score: 0.8
+  
+  # Metrics to track
+  metrics:
+    - "prediction_distribution"
+    - "feature_drift"
+    - "data_quality"
+    - "model_performance"
+  
+  # Alerting (placeholder for future integration)
+  alerting:
+    enabled: false
+    notification_email: "data-science-team@company.com"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # Options: "DEBUG", "INFO", "WARNING", "ERROR"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_path: "./outputs/logs/pipeline.log"
+
+# Workflow Configuration
+workflow:
+  name: "next_best_product_mlops_pipeline"
+  schedule: "0 0 * * 0"  # Cron expression (weekly on Sunday at midnight)
+  timeout_minutes: 120
+  max_retries: 2
+  
+  # Workflow tasks
+  tasks:
+    - name: "data_generation"
+      notebook_path: "./notebooks/00_data_generation"
+      enabled: true
+    - name: "eda"
+      notebook_path: "./notebooks/01_eda"
+      enabled: true
+    - name: "feature_engineering"
+      notebook_path: "./notebooks/02_feature_engineering"
+      enabled: true
+    - name: "model_training"
+      notebook_path: "./notebooks/03_model_training"
+      enabled: true
+    - name: "model_deployment"
+      notebook_path: "./notebooks/04_model_deployment"
+      enabled: true
+    - name: "batch_inference"
+      notebook_path: "./notebooks/05_batch_inference"
+      enabled: true
+    - name: "model_monitoring"
+      notebook_path: "./notebooks/06_model_monitoring"
+      enabled: true
+
+# Random Seed for Reproducibility
+random_seed: 42
