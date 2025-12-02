@@ -12,8 +12,8 @@ data_source:
   
   # Unity Catalog Configuration (for Databricks)
   unity_catalog:
-    catalog: "datafabric_catalog"
-    schema: "customer_hc_silver"
+    catalog: "data_catalog"
+    schema: "customer_hc"
     tables:
       #address: "address"
       party: "party"
@@ -49,7 +49,7 @@ data_source:
 # Feature Store Configuration
 feature_store:
   enabled: true  # Set to false for local mode without Databricks Feature Store
-  database_name: "datafabric_catalog.customer_hc_silver"
+  database_name: "data_catalog.customer_hc"
   table_name: "customer_product_features_fs"
   primary_keys: ["customer_id"]
   timestamp_key: "feature_timestamp"
@@ -60,9 +60,9 @@ mlflow:
   # Databricks Mode
   databricks:
     tracking_uri: "databricks"
-    experiment_name: "/Users/ashish.kamboj@tigeranalytics.com/next-best-product-recommendation"
+    experiment_name: "/Users/<<email_id>>/next-best-product-recommendation"
     model_registry_uri: "databricks-uc"
-    registered_model_name: "datafabric_catalog.customer_hc_silver.next_best_product_model"
+    registered_model_name: "data_catalog.customer_hc.next_best_product_model"
   
   # Local Mode
   local:
@@ -73,7 +73,7 @@ mlflow:
   # Common MLflow Settings
   run_name_prefix: "next_best_product"
   tags:
-    project: "home_credit_hyperpersonalization"
+    project: "Hyperpersonalization"
     use_case: "next_best_product"
     team: "data_science"
     version: "v1.0"
