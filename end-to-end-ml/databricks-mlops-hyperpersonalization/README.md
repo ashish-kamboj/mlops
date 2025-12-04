@@ -1,5 +1,4 @@
 # Next Best Product Recommendation - MLOps Pipeline
-## Home Credit Hyper-Personalization POC
 
 [![Databricks](https://img.shields.io/badge/Databricks-MLOps-orange)](https://databricks.com)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue)](https://python.org)
@@ -39,7 +38,7 @@ This project demonstrates an **end-to-end MLOps pipeline** for building a Next B
 ## 🏗️ Project Structure
 
 ```
-home-credit-hyperpersonalization-poc/
+databricks-mlops-hyperpersonalization/
 │
 ├── config/
 │   └── config.yaml                    # Central configuration file
@@ -349,21 +348,6 @@ This project demonstrates:
 4. **Model Serving**: Real-time and batch inference
 5. **Monitoring**: Drift detection and quality metrics
 6. **MLOps Best Practices**: Modular code, configuration management
-
----
-
-## 📞 Support & Contribution
-
-For questions or contributions:
-1. Create an issue in the repository
-2. Submit a pull request with improvements
-3. Contact the Data Science team
-
----
-
-## 📝 License
-
-This project is for demonstration purposes. Modify as needed for your use case.
 
 ---
 
