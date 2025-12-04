@@ -11,7 +11,7 @@ Get started with the pipeline in under 5 minutes!
 
 ```bash
 # Clone and navigate to project
-cd home-credit-hyperpersonalization-poc
+cd databricks-mlops-hyperpersonalization
 
 # Install requirements
 pip install -r requirements.txt
@@ -69,9 +69,9 @@ mlflow:
 
 Run in SQL notebook:
 ```sql
-CREATE CATALOG IF NOT EXISTS home_credit_catalog;
-CREATE SCHEMA IF NOT EXISTS home_credit_catalog.banking_data;
-CREATE SCHEMA IF NOT EXISTS home_credit_catalog.ml_outputs;
+CREATE CATALOG IF NOT EXISTS data_catalog;
+CREATE SCHEMA IF NOT EXISTS data_catalog.customer_hc;
+CREATE SCHEMA IF NOT EXISTS data_catalog.ml_outputs;
 ```
 
 ### 4. Run Notebooks (5 minutes)
@@ -146,7 +146,7 @@ Check files:
 | `04a_model_registration` | Register model | 1 min | Model in registry |
 | `04b_set_model_alias_to_staging` | Set staging alias | <1 min | Alias updated |
 | `04c_set_model_alias_to_production` | Set production alias | <1 min | Alias updated |
-| `04d_model_deployment` | Deploy endpoint | 1-2 min | Endpoint created |
+| `04d_model_deployment` | Deploy endpoint | 8-10 min | Endpoint created |
 | `05_model_monitoring` | Check model health | 1-2 min | Monitoring reports |
 | `06_Batch_inference` | Predict all customers | 1-2 min | Recommendations |
 | `07_local_realtime_inference` | Test local API | 1 min | Sample predictions |
