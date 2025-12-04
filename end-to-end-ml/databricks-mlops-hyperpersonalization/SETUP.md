@@ -29,7 +29,7 @@ Choose your setup based on your environment:
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd home-credit-hyperpersonalization-poc
+cd databricks-mlops-hyperpersonalization
 
 # Create virtual environment
 python -m venv venv
@@ -135,18 +135,18 @@ Run this in a Databricks SQL notebook:
 
 ```sql
 -- Create catalog
-CREATE CATALOG IF NOT EXISTS home_credit_catalog;
+CREATE CATALOG IF NOT EXISTS data_catalog;
 
 -- Create schemas
-CREATE SCHEMA IF NOT EXISTS home_credit_catalog.banking_data;
-CREATE SCHEMA IF NOT EXISTS home_credit_catalog.ml_outputs;
-CREATE SCHEMA IF NOT EXISTS home_credit_catalog.feature_store;
-CREATE SCHEMA IF NOT EXISTS home_credit_catalog.ml_models;
+CREATE SCHEMA IF NOT EXISTS data_catalog.customer_hc;
+CREATE SCHEMA IF NOT EXISTS data_catalog.ml_outputs;
+CREATE SCHEMA IF NOT EXISTS data_catalog.feature_store;
+CREATE SCHEMA IF NOT EXISTS data_catalog.ml_models;
 
 -- Grant permissions (adjust as needed)
-GRANT USE CATALOG ON CATALOG home_credit_catalog TO `your_group`;
-GRANT ALL PRIVILEGES ON SCHEMA home_credit_catalog.banking_data TO `your_group`;
-GRANT ALL PRIVILEGES ON SCHEMA home_credit_catalog.ml_outputs TO `your_group`;
+GRANT USE CATALOG ON CATALOG data_catalog TO `your_group`;
+GRANT ALL PRIVILEGES ON SCHEMA data_catalog.customer_hc TO `your_group`;
+GRANT ALL PRIVILEGES ON SCHEMA data_catalog.ml_outputs TO `your_group`;
 ```
 
 ### Step 2: Upload Project Files
@@ -179,8 +179,8 @@ data_source:
   type: "unity_catalog"  # IMPORTANT: Set to "unity_catalog"
   
   unity_catalog:
-    catalog: "home_credit_catalog"  # Your catalog name
-    schema: "banking_data"
+    catalog: "data_catalog"  # Your catalog name
+    schema: "customer_hc"
     output_schema: "ml_outputs"
 
 # MLflow Configuration
@@ -189,7 +189,7 @@ mlflow:
     tracking_uri: "databricks"
     experiment_name: "/Users/your-email@company.com/next-best-product-recommendation"  # Update with your email
     model_registry_uri: "databricks-uc"
-    registered_model_name: "home_credit_catalog.ml_models.next_best_product_model"
+    registered_model_name: "data_catalog.ml_models.next_best_product_model"
 ```
 
 ### Step 4: Create Databricks Cluster
@@ -351,7 +351,6 @@ If you encounter issues:
 2. Review Databricks documentation: https://docs.databricks.com
 3. Check MLflow documentation: https://mlflow.org/docs/latest
 4. Review notebook outputs and logs
-5. Contact your Databricks administrator
 
 ---
 
