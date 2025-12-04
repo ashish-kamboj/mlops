@@ -56,7 +56,7 @@ This project delivers a **complete, production-ready MLOps pipeline** for buildi
 ## 📁 Project Structure (Complete)
 
 ```
-home-credit-hyperpersonalization-poc/
+dataricks-mlops-hyperpersonalization/
 │
 ├── config/
 │   └── config.yaml                    # Central configuration (150+ parameters)
@@ -109,7 +109,6 @@ home-credit-hyperpersonalization-poc/
 ├── ER_diagram.txt                    # Database schema (Mermaid)
 └── Table_DDL.txt                     # SQL DDL statements
 
-Total: 18 files, 5000+ lines of code
 ```
 
 ---
@@ -378,6 +377,5 @@ This project delivers a **complete, enterprise-grade MLOps pipeline** that:
 ✅ Is ready for production deployment
 ✅ Can be easily adapted for other use cases
 
-**Perfect for showcasing Databricks MLOps capabilities!**
 
 ---

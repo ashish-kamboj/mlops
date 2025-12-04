@@ -11,7 +11,7 @@ This project implements an end-to-end MLOps pipeline for Next Best Product Recom
 ## 🏗️ Project Structure
 
 ```
-home-credit-hyperpersonalization-poc/
+dataricks-mlops-hyperpersonalization/
 │
 ├── config/
 │   └── config.yaml                    # Central configuration
@@ -242,8 +242,8 @@ data_source:
     output_path: "./data/processed"  # Created when notebooks run
   
   unity_catalog:
-    catalog: "home_credit_catalog"
-    schema: "banking_data"
+    catalog: "data_catalog"
+    schema: "customer_hc"
     output_schema: "ml_outputs"
 ```
 
