@@ -1,0 +1,43 @@
+# Global Configuration for Notebook Orchestration
+# Simple Regression ML Use Case
+
+# Data Configuration
+data:
+  test_size: 0.2
+  random_state: 42
+  normalize: true
+  dataset: synthetic  # synthetic or csv_path
+
+# Model Configuration
+model:
+  type: linear_regression  # linear_regression, ridge, lasso
+  hyperparameters:
+    alpha: 1.0  # For Ridge and Lasso
+    fit_intercept: true
+    random_state: 42
+
+# Training Configuration
+training:
+  validation_split: 0.1
+  epochs: 100  # For iterative training if applicable
+  batch_size: 32
+  early_stopping: true
+
+# Execution Configuration
+execution:
+  mode: "sequential"  # sequential or parallel
+  max_workers: 4  # For parallel execution
+  timeout: 300  # seconds
+
+# Logging Configuration
+logging:
+  level: "INFO"  # INFO, DEBUG, WARNING, ERROR
+  log_file: "logs/orchestration.log"
+
+# Output Configuration
+output:
+  save_outputs: true
+  output_dir: "outputs"
+  save_model: true
+  save_plots: true
+  model_format: "pkl"  # pkl or joblib
