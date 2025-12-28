@@ -1,0 +1,64 @@
+# Docker Compose configuration for ML model deployment
+# FastAPI-based inference server with optional Prometheus monitoring
+
+version: '3.8'
+
+services:
+  model-inference:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: regression-model-inference
+    ports:
+      - "5000:5000"
+    environment:
+      # FastAPI/Uvicorn configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=5000
+      - API_WORKERS=1
+      # Model paths (root-level output/modeling folder)
+      - MODEL_PATH=/output/modeling/regression_model.pkl
+      - FEATURES_PATH=/output/modeling/feature_names.json
+      - METADATA_PATH=/output/modeling/model_params.json
+      # Python configuration
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount root-level output folder
+      - ../output:/output:ro
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - ml-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Prometheus for metrics (uncomment to enable)
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #   networks:
+  #     - ml-network
+
+networks:
+  ml-network:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+    driver: local
