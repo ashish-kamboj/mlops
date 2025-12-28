@@ -1,0 +1,145 @@
+# Model Configuration File
+# This file controls all model training and deployment parameters
+
+# Project Configuration
+project:
+  name: "ML Regression Model Deployment"
+  version: "1.0"
+  description: "Scalable ML regression model for local deployment"
+
+# Cloud/Databricks configuration removed for local setup
+
+# Data Generation Configuration
+data_generation:
+  enabled: true
+  num_samples: 5000
+  num_features: 10
+  random_seed: 42
+  test_size: 0.2
+  val_size: 0.1
+  table_name: "training_data"
+  noise_level: 0.1
+
+# Feature Engineering Configuration
+feature_engineering:
+  enabled: true
+  scaling_method: "standard"  # standard, minmax, robust
+  feature_selection:
+    enabled: true
+    method: "variance"  # variance, mutual_info, correlation
+    n_features: 8
+  feature_interaction:
+    enabled: false
+    interaction_types: ["polynomial"]  # polynomial, interaction
+  output_table_name: "engineered_features"
+
+# Model Training Configuration
+model_training:
+  model_type: "regression"  # regression, classification
+  algorithm: "random_forest"  # linear_regression, random_forest, xgboost, gradient_boosting
+  test_size: 0.2
+  validation_size: 0.1
+  
+  # Hyperparameters (algorithm-specific)
+  hyperparameters:
+    random_forest:
+      n_estimators: 100
+      max_depth: 15
+      min_samples_split: 5
+      min_samples_leaf: 2
+      random_state: 42
+      n_jobs: -1
+    
+    linear_regression:
+      fit_intercept: true
+      normalize: false
+    
+    xgboost:
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8
+      random_state: 42
+    
+    gradient_boosting:
+      n_estimators: 100
+      max_depth: 5
+      learning_rate: 0.1
+      random_state: 42
+  
+  # MLflow Configuration
+  mlflow:
+    experiment_name: "ml_regression_experiment"
+    tracking_uri: "file:./mlruns"  # Local MLflow store
+    run_name: "regression_model_run"
+    tags:
+      environment: "dev"
+      team: "ml_platform"
+      project: "regression_deployment"
+    
+    # Metrics to log
+    metrics:
+      - "mse"
+      - "rmse"
+      - "mae"
+      - "r2_score"
+
+# Model Registry Configuration (optional, local usage)
+model_registry:
+  enabled: false
+  model_name: "regression_model"
+  description: "Regression model for production deployment"
+  stage: "Production"
+
+# Docker Deployment Configuration
+docker:
+  enabled: true
+  image_name: "regression-model-inference"
+  image_tag: "latest"
+  registry: ""  # Leave blank for local image
+  port: 5000
+  base_image: "python:3.9-slim"
+  
+  # Resource Requirements
+  resources:
+    memory: "2Gi"
+    cpu: "1"
+
+# AWS ECR Configuration
+ecr:
+  enabled: false
+  registry: "00xxxxxxxxxx.dkr.ecr.ap-south-1.amazonaws.com"            # e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com
+  repository: "model-k8s-deployment"
+  region: "ap-south-1"
+  account_id: "00xxxxxxxxxx"
+
+# Kubernetes (Minikube) Configuration
+kubernetes:
+  namespace: "default"
+  service_type: "NodePort"
+  container_port: 5000
+  node_port: 30080
+  image_pull_policy: "IfNotPresent"
+
+# Inference Configuration
+inference:
+  batch_size: 100
+  timeout: 30
+  # API endpoint example: POST /api/v1/predict
+  api_endpoints:
+    predict: "/api/v1/predict"
+    predict_batch: "/api/v1/predict_batch"
+    health: "/health"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_to_file: true
+  log_file_path: "./logs/model_deployment.log"
+
+# Advanced Configuration
+advanced:
+  cache_engineered_features: true
+  cache_ttl: 3600  # seconds
+  enable_monitoring: true
+  enable_feature_store_integration: false
