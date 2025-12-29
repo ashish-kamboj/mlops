@@ -1,0 +1,753 @@
+================================================================================
+     COMPLETE GUIDE: BUILD DOCKER IMAGE & PUSH TO ECR
+================================================================================
+
+TABLE OF CONTENTS
+================================================================================
+1. Prerequisites & AWS Credentials Setup
+2. Step-by-Step Instructions for Windows
+3. Step-by-Step Instructions for Linux/Mac
+4. Verification & Testing
+5. Deployment Options
+6. Troubleshooting
+
+================================================================================
+IMPORTANT NOTE ON AWS CREDENTIALS
+================================================================================
+
+YES, AWS Access Key ID and AWS Secret Access Key ARE REQUIRED to push to ECR.
+
+HOW IT WORKS:
+1. When you run "aws configure", you enter:
+   - AWS Access Key ID
+   - AWS Secret Access Key
+   - Default region
+   - Default output format
+
+2. These credentials are stored securely in:
+   - Windows: C:\Users\<YourUsername>\.aws\credentials
+   - Linux/Mac: ~/.aws/credentials
+
+3. When you run "aws ecr get-login-password", AWS CLI uses these stored
+   credentials to authenticate and generate a temporary login token for
+   Docker to connect to your ECR repository.
+
+4. Without valid credentials, the push will fail with:
+   "An error occurred (UnrecognizedClientException) when calling..."
+
+GET YOUR AWS CREDENTIALS:
+- Go to AWS Console → IAM → Users → Your User
+- Security credentials tab → Create access key
+- Copy Access Key ID and Secret Access Key (save securely!)
+
+================================================================================
+SECTION 1: PREREQUISITES & SETUP
+================================================================================
+
+REQUIREMENTS:
+✓ Docker Desktop installed (Windows/Mac) or Docker Engine (Linux)
+✓ AWS Account with ECR access
+✓ AWS CLI installed (aws --version to check)
+✓ Model trained & saved in output/modeling/ folder
+✓ Dockerfile present in docker/ folder
+
+VERIFY INSTALLATIONS:
+Windows PowerShell:
+  docker --version
+  aws --version
+
+Linux/Mac:
+  docker --version
+  aws --version
+
+EXPECTED OUTPUT:
+  Docker version 20.x or higher
+  aws-cli/2.x or higher
+
+================================================================================
+SECTION 2: STEP-BY-STEP FOR WINDOWS (PowerShell)
+================================================================================
+
+STEP 1: CONFIGURE AWS CREDENTIALS
+──────────────────────────────────
+
+1. Open PowerShell as Administrator
+2. Run:
+   aws configure
+
+3. You will be prompted for:
+   AWS Access Key ID: [paste your access key ID]
+   AWS Secret Access Key: [paste your secret access key]
+   Default region name: us-east-1  (or your preferred region)
+   Default output format: json
+
+4. Verify credentials were saved:
+   cat $env:USERPROFILE\.aws\credentials
+
+Expected output should show your access_key_id and secret_access_key
+
+
+STEP 2: SET ENVIRONMENT VARIABLES
+──────────────────────────────────
+
+In PowerShell, define your AWS and ECR details:
+
+$env:AWS_REGION = "ap-south-1"
+$env:AWS_ACCOUNT_ID = "123456789012"
+$env:ECR_REPO_NAME = "regression-model-inference"
+$env:IMAGE_TAG = "latest"
+
+Replace 123456789012 with your actual AWS Account ID
+
+To find your Account ID:
+- Go to AWS Console → Click on account name (top-right) → My Account
+- Copy the 12-digit Account ID
+
+
+STEP 3: CREATE ECR REPOSITORY (First Time Only)
+────────────────────────────────────────────────
+
+Run:
+  aws ecr create-repository `
+    --repository-name $env:ECR_REPO_NAME `
+    --region $env:AWS_REGION
+
+Expected output:
+  "repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/..."
+
+If already exists, you'll get an error (that's ok, skip this step)
+
+
+STEP 4: VERIFY MODEL FILES EXIST
+─────────────────────────────────
+
+Run:
+  dir ..\output\modeling\
+
+You should see:
+  - regression_model.pkl
+  - model_params.json
+  - feature_names.json
+
+If files don't exist, run notebooks 01→02→03 first.
+
+
+STEP 5: BUILD DOCKER IMAGE
+───────────────────────────
+
+Navigate to docker folder:
+  cd docker
+
+Build the image:
+  docker build -t regression-model-inference:latest .
+
+Expected output (end lines):
+  [+] Building 1.2s (15/15) FINISHED
+  => exporting to image                              0.1s
+  => => naming to docker.io/library/regression-model-inference:latest  0.0s
+
+Note: This may take 2-3 minutes on first build
+
+
+STEP 6: VERIFY IMAGE WAS BUILT
+───────────────────────────────
+
+Run:
+  docker images | grep regression-model-inference
+
+Expected output:
+  regression-model-inference   latest   abcd1234ef56   2 min ago   500MB
+
+
+STEP 7: LOGIN TO ECR
+────────────────────
+
+Create ECR URI variable:
+  $ECR_URI = "$env:AWS_ACCOUNT_ID.dkr.ecr.$env:AWS_REGION.amazonaws.com"
+
+Login to ECR:
+  aws ecr get-login-password --region $env:AWS_REGION | `
+    docker login --username AWS --password-stdin $ECR_URI
+
+Expected output:
+  Login Succeeded
+
+If you get "UnrecognizedClientException":
+- Check AWS credentials with: aws sts get-caller-identity
+- Verify account ID is correct
+
+
+STEP 8: TAG IMAGE FOR ECR
+─────────────────────────
+
+Create full ECR image URI:
+  $IMAGE_URI = "$ECR_URI/$env:ECR_REPO_NAME:$env:IMAGE_TAG"
+
+Tag the image:
+  docker tag regression-model-inference:latest $IMAGE_URI
+
+Verify tag:
+  docker images | grep regression-model-inference
+
+
+STEP 9: PUSH IMAGE TO ECR
+─────────────────────────
+
+Run:
+  docker push $IMAGE_URI
+
+Expected output (takes 30-60 seconds):
+  latest: Pushed
+  Pushed sha256:abcd1234...
+  Pushed sha256:ef567890...
+
+This means your image is now in ECR!
+
+
+STEP 10: VERIFY IMAGE IN ECR
+─────────────────────────────
+
+List images in ECR repository:
+  aws ecr describe-images --repository-name $env:ECR_REPO_NAME --region $env:AWS_REGION
+
+You should see your image listed with:
+  - imagePushedAt (recent timestamp)
+  - imageSizeInBytes
+  - imageId with tag "latest"
+
+
+STEP 11: (OPTIONAL) AUTOMATE WITH SCRIPT
+──────────────────────────────────────────
+
+Instead of manual steps, you can use the provided script:
+
+  cd ..\scripts
+  .\ecr_push.ps1 -IMAGE_NAME regression-model-inference -IMAGE_TAG latest
+
+This script automates steps 7-9 automatically.
+
+================================================================================
+SECTION 3: STEP-BY-STEP FOR LINUX/MAC
+================================================================================
+
+STEP 1: CONFIGURE AWS CREDENTIALS
+──────────────────────────────────
+
+1. Open Terminal
+2. Run:
+   aws configure
+
+3. You will be prompted for:
+   AWS Access Key ID: [paste your access key ID]
+   AWS Secret Access Key: [paste your secret access key]
+   Default region name: us-east-1
+   Default output format: json
+
+4. Verify credentials:
+   cat ~/.aws/credentials
+
+Should show your access_key_id and secret_access_key
+
+
+STEP 2: SET ENVIRONMENT VARIABLES
+──────────────────────────────────
+
+In Terminal, define your AWS and ECR details:
+
+  export AWS_REGION="us-east-1"
+  export AWS_ACCOUNT_ID="123456789012"
+  export ECR_REPO_NAME="regression-model-inference"
+  export IMAGE_TAG="latest"
+
+Replace 123456789012 with your actual AWS Account ID
+
+Note: These variables last only for current terminal session.
+To make permanent, add to ~/.bashrc or ~/.zshrc
+
+
+STEP 3: CREATE ECR REPOSITORY (First Time Only)
+────────────────────────────────────────────────
+
+Run:
+  aws ecr create-repository \
+    --repository-name $ECR_REPO_NAME \
+    --region $AWS_REGION
+
+Expected output:
+  "repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/..."
+
+If already exists, you'll get an error (that's ok, skip this step)
+
+
+STEP 4: VERIFY MODEL FILES EXIST
+─────────────────────────────────
+
+Run:
+  ls -la ../output/modeling/
+
+You should see:
+  - regression_model.pkl
+  - model_params.json
+  - feature_names.json
+
+If files don't exist, run notebooks 01→02→03 first.
+
+
+STEP 5: BUILD DOCKER IMAGE
+───────────────────────────
+
+Navigate to docker folder:
+  cd docker
+
+Build the image:
+  docker build -t regression-model-inference:latest .
+
+Expected output (end lines):
+  [+] Building 1.2s (15/15) FINISHED
+  => exporting to image                              0.1s
+  => => naming to docker.io/library/regression-model-inference:latest  0.0s
+
+Note: This may take 2-3 minutes on first build
+
+
+STEP 6: VERIFY IMAGE WAS BUILT
+───────────────────────────────
+
+Run:
+  docker images | grep regression-model-inference
+
+Expected output:
+  regression-model-inference   latest   abcd1234ef56   2 min ago   500MB
+
+
+STEP 7: LOGIN TO ECR
+────────────────────
+
+Create ECR URI variable:
+  ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+Login to ECR:
+  aws ecr get-login-password --region $AWS_REGION | \
+    docker login --username AWS --password-stdin $ECR_URI
+
+Expected output:
+  Login Succeeded
+
+If you get "UnrecognizedClientException":
+- Check AWS credentials: aws sts get-caller-identity
+- Verify account ID is correct
+
+
+STEP 8: TAG IMAGE FOR ECR
+─────────────────────────
+
+Create full ECR image URI:
+  IMAGE_URI="$ECR_URI/$ECR_REPO_NAME:$IMAGE_TAG"
+
+Tag the image:
+  docker tag regression-model-inference:latest $IMAGE_URI
+
+Verify tag:
+  docker images | grep regression-model-inference
+
+
+STEP 9: PUSH IMAGE TO ECR
+─────────────────────────
+
+Run:
+  docker push $IMAGE_URI
+
+Expected output (takes 30-60 seconds):
+  latest: Pushed
+  Pushed sha256:abcd1234...
+  Pushed sha256:ef567890...
+
+This means your image is now in ECR!
+
+
+STEP 10: VERIFY IMAGE IN ECR
+─────────────────────────────
+
+List images in ECR repository:
+  aws ecr describe-images \
+    --repository-name $ECR_REPO_NAME \
+    --region $AWS_REGION
+
+You should see your image listed with:
+  - imagePushedAt (recent timestamp)
+  - imageSizeInBytes
+  - imageId with tag "latest"
+
+
+STEP 11: (OPTIONAL) AUTOMATE WITH SCRIPT
+──────────────────────────────────────────
+
+Instead of manual steps, you can use the provided script:
+
+  cd ../scripts
+  chmod +x ecr_push.sh
+  ./ecr_push.sh
+
+This script automates steps 7-9 automatically.
+
+================================================================================
+SECTION 4: VERIFICATION & TESTING
+================================================================================
+
+TEST 1: VERIFY IMAGE IS IN ECR (Both Windows & Linux)
+──────────────────────────────────────────────────────
+
+List all images in your ECR repository:
+
+  Windows:
+    aws ecr describe-images `
+      --repository-name regression-model-inference `
+      --region us-east-1
+
+  Linux/Mac:
+    aws ecr describe-images \
+      --repository-name regression-model-inference \
+      --region us-east-1
+
+Look for:
+- imageTags: ["latest"]
+- imageSizeInBytes: 500000000 (approx)
+- imagePushedAt: (should be recent timestamp)
+
+
+TEST 2: PULL IMAGE FROM ECR TO VERIFY
+──────────────────────────────────────
+
+First, logout and login again to test pull:
+
+  Windows:
+    docker logout
+    aws ecr get-login-password --region us-east-1 | `
+      docker login --username AWS --password-stdin $ECR_URI
+    docker pull $IMAGE_URI
+
+  Linux/Mac:
+    docker logout
+    aws ecr get-login-password --region us-east-1 | \
+      docker login --username AWS --password-stdin $ECR_URI
+    docker pull $IMAGE_URI
+
+Expected output:
+  latest: Pulling from regression-model-inference
+  Digest: sha256:abcd1234...
+  Status: Downloaded newer image for ...
+  (or "Status: Downloaded image is up to date" if already local)
+
+
+TEST 3: RUN CONTAINER FROM ECR IMAGE
+─────────────────────────────────────
+
+Run container locally:
+
+  Windows:
+    docker run -d -p 5000:5000 `
+      -v $PWD\..\output:/output:ro `
+      $IMAGE_URI
+
+  Linux/Mac:
+    docker run -d -p 5000:5000 \
+      -v $(pwd)/../output:/output:ro \
+      $IMAGE_URI
+
+Get container ID from output.
+
+Check if running:
+  docker ps
+
+Test API:
+  Windows:
+    curl http://localhost:5000/health
+    $body = @{ features = @(1,1,1,1,1,1,1,1) } | ConvertTo-Json
+    Invoke-WebRequest -Uri http://localhost:5000/api/v1/predict `
+      -Method POST -Body $body -ContentType "application/json"
+
+  Linux/Mac:
+    curl http://localhost:5000/health
+    curl -X POST http://localhost:5000/api/v1/predict \
+      -H "Content-Type: application/json" \
+      -d '{"features": [1,1,1,1,1,1,1,1]}'
+
+Expected response:
+  {"status": "healthy", "features_count": 8, ...}
+
+Stop container:
+  docker stop <container-id>
+
+================================================================================
+SECTION 5: DEPLOYMENT OPTIONS
+================================================================================
+
+OPTION 1: DEPLOY TO MINIKUBE (Local Kubernetes Testing)
+───────────────────────────────────────────────────────
+
+1. Update k8s/deployment.yaml with your ECR image URI:
+
+   Open k8s/deployment.yaml and find:
+     image: regression-model-inference:latest
+   
+   Replace with:
+     image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/regression-model-inference:latest
+
+2. Deploy to Minikube:
+
+   Windows:
+     .\scripts\k8s_deploy_minikube.ps1
+
+   Linux/Mac:
+     ./scripts/k8s_deploy_minikube.sh
+
+3. Access API:
+   http://localhost:30080/health
+   http://localhost:30080/api/v1/predict
+
+4. View logs:
+   kubectl logs -l app=regression-model
+
+
+OPTION 2: DEPLOY TO AWS ECS (Elastic Container Service)
+───────────────────────────────────────────────────────
+
+1. Create ECS Cluster:
+   - Go to AWS Console → ECS → Clusters → Create Cluster
+   - Choose launch type: EC2 or Fargate
+
+2. Create Task Definition:
+   - Container image: Your ECR image URI
+   - Port: 5000
+   - Memory: 512 MB
+   - CPU: 256
+
+3. Create Service:
+   - Task definition: your-task-def
+   - Desired count: 1 or more
+   - Load balancer: Application Load Balancer (ALB)
+
+4. Access API:
+   http://<alb-dns-name>/health
+
+
+OPTION 3: DEPLOY TO AWS EKS (Elastic Kubernetes Service)
+─────────────────────────────────────────────────────────
+
+1. Create EKS Cluster:
+   - Use AWS Console or eksctl command
+   - Configure kubectl
+
+2. Update k8s/deployment.yaml with ECR image URI
+
+3. Deploy:
+   kubectl apply -f k8s/deployment.yaml
+   kubectl apply -f k8s/service.yaml
+
+4. Get service details:
+   kubectl get svc regression-model-service
+
+5. Access API via LoadBalancer IP/DNS
+
+
+OPTION 4: TEST LOCALLY WITH DOCKER-COMPOSE
+────────────────────────────────────────────
+
+Before pushing to ECR, test locally:
+
+  cd docker
+  docker-compose up -d
+
+Access:
+  http://localhost:5000/health
+
+Stop:
+  docker-compose down
+
+================================================================================
+SECTION 6: TROUBLESHOOTING
+================================================================================
+
+ERROR 1: "UnrecognizedClientException"
+──────────────────────────────────────
+
+Symptom:
+  An error occurred (UnrecognizedClientException) when calling the
+  GetAuthorizationToken operation: The security token included in the
+  request is invalid.
+
+Solution:
+  1. Check AWS credentials are configured:
+     aws sts get-caller-identity
+  
+  2. Verify credentials in:
+     Windows: type %USERPROFILE%\.aws\credentials
+     Linux/Mac: cat ~/.aws/credentials
+  
+  3. Re-configure credentials:
+     aws configure
+  
+  4. Verify account ID matches actual AWS account ID
+
+
+ERROR 2: "No such file or directory: /output/modeling/regression_model.pkl"
+──────────────────────────────────────────────────────────────────────────
+
+Symptom:
+  Model not found when running container
+
+Solution:
+  1. Verify model files exist:
+     Windows: dir ..\output\modeling\
+     Linux/Mac: ls ../output/modeling/
+  
+  2. Run notebooks 01, 02, 03 to generate model
+  
+  3. Ensure docker-compose mounts are correct:
+     - ../output:/output:ro
+
+
+ERROR 3: "Unknown flag: -d" in docker run command
+───────────────────────────────────────────────────
+
+Symptom:
+  Unknown flag: -d
+  Flag provided but not defined: -d
+
+Solution:
+  Make sure you're using Docker, not Podman
+  docker --version (should show Docker version)
+
+
+ERROR 4: "Repository not found" during push
+─────────────────────────────────────────────
+
+Symptom:
+  no repositories named 'regression-model-inference' found
+
+Solution:
+  1. Create repository first:
+     aws ecr create-repository --repository-name regression-model-inference
+  
+  2. Check repository exists:
+     aws ecr describe-repositories
+
+
+ERROR 5: Image takes too long to push / stuck
+───────────────────────────────────────────────
+
+Possible causes:
+  - Slow internet connection
+  - Large image size (normal: 500MB)
+  - Network timeout
+
+Solution:
+  1. Check Docker daemon is running
+  2. Verify network connectivity: ping 8.8.8.8
+  3. Try pushing again with: docker push <image-uri>
+  4. Monitor: docker events (in another terminal)
+
+
+ERROR 6: "denied: User is not authorized to perform: ecr:GetDownloadUrlForLayer"
+────────────────────────────────────────────────────────────────────────────────
+
+Symptom:
+  Access denied when trying to push
+
+Solution:
+  Your AWS user needs ECR permissions. Add IAM policy:
+  - Go to IAM → Users → Your User → Add Policy
+  - Search for: AmazonEC2ContainerRegistryPowerUser
+  - Or create custom policy with ecr:* permissions
+
+
+QUICK DIAGNOSTIC CHECKLIST
+──────────────────────────
+
+Before troubleshooting, verify:
+
+  ✓ Docker is running: docker ps
+  ✓ AWS CLI works: aws --version
+  ✓ AWS credentials configured: aws sts get-caller-identity
+  ✓ Model files exist: ls output/modeling/
+  ✓ Dockerfile exists: ls docker/Dockerfile
+  ✓ Internet connection is stable
+  ✓ AWS account ID is correct (12 digits)
+  ✓ Region is set correctly (us-east-1, eu-west-1, etc.)
+
+================================================================================
+NEXT STEPS AFTER PUSHING TO ECR
+================================================================================
+
+1. DEPLOY TO MINIKUBE (Local K8s Testing):
+   - Review deployment.yaml with ECR image URI
+   - Run: ./scripts/k8s_deploy_minikube.ps1 (Windows)
+   - Or: ./scripts/k8s_deploy_minikube.sh (Linux/Mac)
+   - Test: http://localhost:30080/health
+
+2. DEPLOY TO PRODUCTION (AWS ECS/EKS):
+   - Create ECS task definition or EKS deployment
+   - Use ECR image URI
+   - Configure auto-scaling if needed
+   - Set up monitoring and logging
+
+3. CONTINUOUS DEPLOYMENT:
+   - Set up CI/CD pipeline (GitHub Actions, GitLab CI, etc.)
+   - Auto-build image on code changes
+   - Auto-push to ECR
+   - Auto-deploy to K8s/ECS
+
+4. MONITOR IN PRODUCTION:
+   - Set up CloudWatch logging
+   - Monitor API endpoints
+   - Set up alerts for failures
+   - Use Prometheus for metrics
+
+================================================================================
+QUICK REFERENCE COMMANDS
+================================================================================
+
+WINDOWS (PowerShell):
+─────────────────────
+
+# Setup
+aws configure
+$env:AWS_REGION = "us-east-1"
+$env:AWS_ACCOUNT_ID = "123456789012"
+$env:ECR_REPO_NAME = "regression-model-inference"
+
+# Build & Push
+cd docker
+docker build -t regression-model-inference:latest .
+$ECR_URI = "$env:AWS_ACCOUNT_ID.dkr.ecr.$env:AWS_REGION.amazonaws.com"
+aws ecr get-login-password --region $env:AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+docker tag regression-model-inference:latest $ECR_URI/$env:ECR_REPO_NAME:latest
+docker push $ECR_URI/$env:ECR_REPO_NAME:latest
+
+# Verify
+aws ecr describe-images --repository-name regression-model-inference --region $env:AWS_REGION
+
+
+LINUX/MAC (Bash):
+─────────────────
+
+# Setup
+aws configure
+export AWS_REGION="us-east-1"
+export AWS_ACCOUNT_ID="123456789012"
+export ECR_REPO_NAME="regression-model-inference"
+
+# Build & Push
+cd docker
+docker build -t regression-model-inference:latest .
+ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+docker tag regression-model-inference:latest $ECR_URI/$ECR_REPO_NAME:latest
+docker push $ECR_URI/$ECR_REPO_NAME:latest
+
+# Verify
+aws ecr describe-images --repository-name $ECR_REPO_NAME --region $AWS_REGION
+
+================================================================================
+                            END OF GUIDE
+================================================================================

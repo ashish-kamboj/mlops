@@ -1,0 +1,225 @@
+================================================================================
+     COMPLETE GUIDE: INSTALL MINIKUBE & DEPLOY DOCKER TO KUBERNETES (LOCAL)
+================================================================================
+
+TABLE OF CONTENTS
+================================================================================
+1. What Is Minikube? (Why use it)
+2. Prerequisites
+3. Install Minikube + kubectl (Windows)
+4. Install Minikube + kubectl (Linux/Mac)
+5. Start Minikube (Recommended settings)
+6. Use Local Docker Image (minikube image load)
+7. Make Model Artifacts Available (minikube mount)
+8. Deploy Manifests & Test API
+9. Use ECR Image Instead (Optional)
+10. Troubleshooting
+11. Quick Reference Commands
+
+================================================================================
+1) WHAT IS MINIKUBE?
+================================================================================
+Minikube runs a single-node Kubernetes cluster locally. It’s ideal for:
+- Testing Kubernetes deployments on your machine
+- Validating manifests (Deployment/Service)
+- Fast feedback before pushing to cloud (EKS/ECS)
+
+================================================================================
+2) PREREQUISITES
+================================================================================
+- Docker installed and running (Docker Desktop or Docker Engine)
+- kubectl installed
+- Your project’s Docker image built locally (or available in ECR)
+- Model artifacts present under output/modeling/ (pkl/json)
+
+Verify:
+  docker --version
+  kubectl version --client
+
+================================================================================
+3) INSTALL MINIKUBE + KUBECTL (WINDOWS POWERSHELL)
+================================================================================
+Option A: Chocolatey (recommended):
+  choco install -y minikube kubernetes-cli
+
+Option B: Scoop:
+  scoop install minikube kubectl
+
+Option C: Manual:
+  - Download Minikube: https://minikube.sigs.k8s.io/docs/start/
+  - Download kubectl: https://kubernetes.io/docs/tasks/tools/
+  - Add both to PATH
+
+Check installation:
+  minikube version
+  kubectl version --client
+
+================================================================================
+4) INSTALL MINIKUBE + KUBECTL (LINUX/MAC)
+================================================================================
+macOS (Homebrew):
+  brew install minikube kubectl
+
+Linux (Debian/Ubuntu):
+  curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+  sudo install minikube-linux-amd64 /usr/local/bin/minikube
+  curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+  sudo install kubectl /usr/local/bin/kubectl
+
+Check installation:
+  minikube version
+  kubectl version --client
+
+================================================================================
+5) START MINIKUBE (RECOMMENDED SETTINGS)
+================================================================================
+Use Docker driver and allocate reasonable resources:
+
+Windows PowerShell:
+  minikube start --driver=docker --cpus=2 --memory=4096
+
+Linux/Mac:
+  minikube start --driver=docker --cpus=2 --memory=4096
+
+Check status:
+  minikube status
+
+Switch kubectl context (if needed):
+  kubectl config use-context minikube
+
+================================================================================
+6) USE LOCAL DOCKER IMAGE (minikube image load)
+================================================================================
+If you built a local image (regression-model-inference:latest):
+
+Build (from project docker/ folder):
+  cd docker
+  docker build -t regression-model-inference:latest .
+
+Load into Minikube image cache:
+  minikube image load regression-model-inference:latest
+
+This lets your Deployment use image: regression-model-inference:latest without pulling from a registry.
+
+================================================================================
+7) MAKE MODEL ARTIFACTS AVAILABLE (minikube mount)
+================================================================================
+Your Deployment mounts /output via hostPath: /tmp/ml-output to access model files:
+- k8s/deployment.yaml uses:
+  - env MODEL_PATH=/output/modeling/regression_model.pkl
+  - volumeMounts: /output
+  - hostPath: /tmp/ml-output
+
+To provide local files to the pod, mount your project’s output folder into the Minikube node:
+
+Windows PowerShell:
+  minikube mount (Resolve-Path ..\output).Path:/tmp/ml-output
+
+Linux/Mac:
+  minikube mount $(pwd)/../output:/tmp/ml-output
+
+  or use abslute path (if above one fails)
+    - minikube mount /mnt/d/<<folder-name>>/output:/tmp/ml-output
+
+Keep this mount running in a separate terminal (it runs until Ctrl+C).
+
+Alternative: copy files to node (less convenient):
+  minikube ssh
+  # inside node, place files under /tmp/ml-output/modeling, etc.
+
+================================================================================
+8) DEPLOY MANIFESTS & TEST API
+================================================================================
+Apply manifests:
+  kubectl apply -f k8s/deployment.yaml
+  kubectl apply -f k8s/service.yaml
+
+Wait for rollout:
+  kubectl rollout status deployment/regression-model-deployment
+
+Port-forward service (localhost:30080 → service:5000):
+  kubectl port-forward svc/regression-model-service 30080:5000
+
+Test API:
+  curl http://localhost:30080/health
+  curl -X POST http://localhost:30080/api/v1/predict \
+    -H "Content-Type: application/json" \
+    -d '{"features": [1,1,1,1,1,1,1,1]}'
+
+Logs:
+  kubectl logs -l app=regression-model
+
+Cleanup (remove running pods/service from cluster; YAML files remain on disk):
+  kubectl delete -f k8s/deployment.yaml
+  kubectl delete -f k8s/service.yaml
+  # Use this to free resources, redeploy with new model, or test from scratch.
+
+================================================================================
+9) USE ECR IMAGE INSTEAD (OPTIONAL)
+================================================================================
+If your image is pushed to ECR, update the Deployment to pull from ECR:
+
+Edit k8s/deployment.yaml:
+  image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/regression-model-inference:latest
+
+Ensure Minikube can pull from ECR (if private):
+- ECR public access or
+- Configure imagePullSecrets & provide registry credentials (advanced)
+
+You still need to mount model artifacts via minikube mount (unless you bake them into the image).
+
+================================================================================
+10) TROUBLESHOOTING
+================================================================================
+Pod CrashLoopBackOff / model not found:
+- Verify mount is running
+- Check pod has /output/modeling/regression_model.pkl
+- kubectl exec -it <pod> -- ls -la /output/modeling
+
+ImagePullBackOff:
+- Using local image? Run: minikube image load regression-model-inference:latest
+- Using ECR? Check image URI and registry access
+
+Service not reachable:
+- Confirm port-forward session is active
+- kubectl get svc regression-model-service (NodePort should be 30080)
+
+Mount fail:
+- Ensure path exists locally (../output)
+- Run mount in separate terminal; Minikube shows mount logs and errors
+
+Wrong kubectl context:
+- kubectl config current-context (should be minikube)
+- kubectl config use-context minikube
+
+================================================================================
+11) QUICK REFERENCE COMMANDS
+================================================================================
+Start cluster:
+  minikube start --driver=docker --cpus=2 --memory=4096
+
+Load local image:
+  docker build -t regression-model-inference:latest ./docker
+  minikube image load regression-model-inference:latest
+
+Mount output folder:
+  # Windows
+  minikube mount (Resolve-Path ..\output).Path:/tmp/ml-output
+  # Linux/Mac
+  minikube mount $(pwd)/../output:/tmp/ml-output
+
+Deploy & test:
+  kubectl apply -f k8s/deployment.yaml
+  kubectl apply -f k8s/service.yaml
+  kubectl rollout status deployment/regression-model-deployment
+  kubectl port-forward svc/regression-model-service 30080:5000
+  curl http://localhost:30080/health
+
+Stop & clean:
+  kubectl delete -f k8s/deployment.yaml
+  kubectl delete -f k8s/service.yaml
+  minikube stop
+
+================================================================================
+END OF GUIDE — MINIKUBE SETUP & DEPLOYMENT
+================================================================================
