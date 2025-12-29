@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: regression-model-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: regression-model
+  template:
+    metadata:
+      labels:
+        app: regression-model
+    spec:
+      containers:
+        - name: fastapi-server
+          image: regression-model-inference:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: API_HOST
+              value: "0.0.0.0"
+            - name: API_PORT
+              value: "5000"
+            - name: MODEL_PATH
+              value: "/output/modeling/regression_model.pkl"
+            - name: FEATURES_PATH
+              value: "/output/modeling/feature_names.json"
+            - name: METADATA_PATH
+              value: "/output/modeling/model_params.json"
+          volumeMounts:
+            - name: output-volume
+              mountPath: /output
+      volumes:
+        - name: output-volume
+          hostPath:
+            path: /tmp/ml-output
+            type: DirectoryOrCreate

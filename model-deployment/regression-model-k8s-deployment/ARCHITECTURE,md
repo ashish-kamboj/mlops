@@ -1,0 +1,345 @@
+# Architecture and Data Flow Documentation
+
+## System Architecture (Local-First, CSV Storage, Organized Output)
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│              LOCAL DEVELOPMENT & TRAINING (Notebooks)               │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │           Notebook Execution (Jupyter)                      │   │
+│  ├─────────────────────────────────────────────────────────────┤   │
+│  │                                                             │   │
+│  │  01. Data Generation        02. Feature Engineering         │   │
+│  │  ┌──────────────────────┐   ┌──────────────────────┐        │   │
+│  │  │ • Generate samples   │   │ • Feature selection  │        │   │
+│  │  │ • Add noise          │   │ • Scaling            │        │   │
+│  │  │ • Create features    │   │ • Split data         │        │   │
+│  │  │ • Add metadata       │   │ • Interactions       │        │   │
+│  │  └──────────────────────┘   └──────────────────────┘        │   │
+│  │           │ (CSV)                     │ (CSV)               │   │
+│  │           ▼                           ▼                     │   │
+│  │  ../output/data/           ../output/feature_engineering/   │   │
+│  │  training_data.csv         train.csv, val.csv, test.csv     │   │
+│  │  • 5000 samples            • 3500 train, 700 val, 800 test  │   │
+│  │  • 8 features              • scaled features                │   │
+│  │  • target                  • feature_names.json             │   │
+│  │                                                             │   │
+│  │  03. Model Training                                         │   │
+│  │  ┌──────────────────────┐                                   │   │
+│  │  │ • Load CSV splits ◄──┼─ ../output/feature_engineering/   │   │
+│  │  │ • Build model        │                                   │   │
+│  │  │ • Train              │                                   │   │
+│  │  │ • Evaluate           │                                   │   │
+│  │  │ • Track with MLflow  │                                   │   │
+│  │  └──────────────────────┘                                   │   │
+│  │        │ (MLflow)           │ (pkl, json)                   │   │
+│  │        ▼                     ▼                              │   │
+│  │  ../output/mlruns/       ../output/modeling/                │   │
+│  │  ├── 0/                 ├── regression_model.pkl            │   │
+│  │  │   ├── meta.yaml      ├── model_params.json               │   │
+│  │  │   ├── params/        └── feature_names.json              │   │
+│  │  │   ├── metrics/                                           │   │
+│  │  │   └── artifacts/                                         │   │
+│  │  └── ...                                                    │   │
+│  │                                                             │   │
+│  │  04. Inference Testing (Local)                              │   │
+│  │  ┌──────────────────────┐                                   │   │
+│  │  │ • Load pkl model     │                                   │   │
+│  │  │ • Single predictions │                                   │   │
+│  │  │ • Batch predictions  │                                   │   │
+│  │  │ • Performance metrics│                                   │   │
+│  │  └──────────────────────┘                                   │   │
+│  │                                                             │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+         ↓ (Containerize)
+┌────────────────────────────────────────────────────────────────────┐
+│               DOCKER BUILD & LOCAL DEPLOYMENT                      │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  Docker Build Process                                       │   │
+│  ├─────────────────────────────────────────────────────────────┤   │
+│  │  • Base image: python:3.9-slim                              │   │
+│  │  • Install dependencies (requirements.txt)                  │   │
+│  │  • Copy FastAPI app (app.py)                                │   │
+│  │  • Create /output/{data,feature_engineering,modeling,mlruns}│   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│           ↓                                                        │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  Docker Container Runtime (via docker-compose)              │   │
+│  ├─────────────────────────────────────────────────────────────┤   │
+│  │                                                             │   │
+│  │  Container Mounts:                                          │   │
+│  │  • ../output  → /output (read-only)                         │   │
+│  │    ├── data/                                                │   │
+│  │    ├── feature_engineering/                                 │   │
+│  │    ├── modeling/                                            │   │
+│  │    └── mlruns/                                              │   │
+│  │                                                             │   │
+│  │  ┌──────────────────────────────────────────────┐           │   │
+│  │  │  FastAPI Application                         │           │   │
+│  │  ├──────────────────────────────────────────────┤           │   │
+│  │  │  • Load model from /output/modeling/*.pkl    │           │   │
+│  │  │  • Load features from /output/modeling/*.json|           │   │
+│  │  │  • Expose /health, /api/v1/predict, etc.     |           │   │
+│  │  │  • Prometheus metrics on /metrics            |           │   │
+│  │  └──────────────────────────────────────────────┘           │   │
+│  │                                                             │   │
+│  │  Port Mappings:                                             │   │
+│  │  • 5000 (container) → 5000 (host)                           │   │
+│  │                                                             │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+         ↓ (Optional: Push to ECR & Deploy to K8s)
+┌────────────────────────────────────────────────────────────────────┐
+│        AWS ECR & KUBERNETES DEPLOYMENT (Optional)                  │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌──────────────────────┐         ┌──────────────────────┐         │
+│  │  ECR Push (Optional) │         │  Minikube Deployment │         │
+│  ├──────────────────────┤         ├──────────────────────┤         │
+│  │ • Tag image          │         │ • Apply manifests    │         │
+│  │ • Login to ECR       │         │ • Deploy replicas    │         │
+│  │ • Push to registry   │         │ • Expose via NodePort│         │
+│  └──────────────────────┘         └──────────────────────┘         │
+│           ↓                               ↓                        │
+│  ECR: 123...dkr.ecr...amazonaws.com   K8s: NodePort 30080          │
+│                                                                    │
+│  K8s Volume Mount:                                                 │
+│  • /tmp/ml-output → /output (hostPath for data persistence)        │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+        │   Client Applications                     │
+        ├───────────────────────────────────────────┤
+        │  • Web Applications                       │
+        │  • Mobile Apps                            │
+        │  • Data Pipelines                         │
+        │  • Batch Processing                       │
+        │  • Real-time Dashboards                   │
+        └───────────────────────────────────────────┘
+```
+
+---
+
+## Data Flow Diagram
+
+```
+                    STAGE 1: DATA GENERATION
+                    ═════════════════════════
+
+    Configuration (YAML)
+            │
+            ▼
+    ┌────────────────────┐
+    │  num_samples: 5000 |
+    │  num_features: 10  |
+    │  noise_level: 0.1  |
+    └────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Generate Random Features (X)        │
+    │  Shape: (5000, 10)                   │
+    │  Range: [0, 10] normalized           │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Create Target (y)                   │
+    │  y = 2X₁ + 3X₂ + 1.5X₃ - 1X₄ + noise │
+    │  Shape: (5000,)                      │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Add Metadata                        │
+    │  • dataset_id                        │
+    │  • created_at                        │
+    │  • split (train/val/test)            │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Save as Parquet                     │
+    │  training_data.parquet               │
+    │  Schema: 13 columns                  │
+    │  Size: ~1 MB                         │
+    └──────────────────────────────────────┘
+
+
+                    STAGE 2: FEATURE ENGINEERING
+                    ════════════════════════════
+
+    Raw Features (10)
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Feature Selection                   │
+    │  Method: variance                    │
+    │  Select top 8 features               │
+    │  Features: [feature_1, 2, 3, ...]    │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Data Splitting                      │
+    │  Train: 3500 (70%)                   │
+    │  Val:   750 (15%)                    │
+    │  Test:  750 (15%)                    │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Feature Scaling                     │
+    │  Method: StandardScaler              │
+    │  Mean: 0, Std: 1                     │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Engineered Features (8)             │
+    │  Train: (3500, 8)                    │
+    │  Val:   (750, 8)                     │
+    │  Test:  (750, 8)                     │
+    │  All normalized and scaled           │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Save Artifacts                      │
+    │  • engineered_features.parquet       │
+    │  • feature_metadata.json             │
+    │  • feature_names.json                │
+    └──────────────────────────────────────┘
+
+
+                    STAGE 3: MODEL TRAINING
+                    ══════════════════════════
+
+    Training Data (X_train, y_train)
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Algorithm: Random Forest            │
+    │  n_estimators: 100                   │
+    │  max_depth: 15                       │
+    └──────────────────────────────────────┘
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Training                            │
+    │  Time: ~5 seconds                    │
+    │  100 trees created                   │
+    └──────────────────────────────────────┘
+            │
+            ├─────────────────────────┬────────────────────────┐
+            │                         │                        │
+            ▼                         ▼                        ▼
+    Validation Set         MLflow Tracking        Test Set
+            │                         │                        │
+            ▼                         ▼                        ▼
+    ┌──────────────┐        ┌──────────────┐        ┌──────────────┐
+    │ Predictions  │        │ Log Metrics  │        │ Predictions  │
+    │ Metrics      │        │ Log Model    │        │ Final Score  │
+    │ RMSE: 0.15   │        │ Artifacts    │        │ R²: 0.92     │
+    └──────────────┘        └──────────────┘        └──────────────┘
+            │                         │                        │
+            └─────────────────────────┴────────────────────────┘
+                                    │
+                                    ▼
+                        ┌──────────────────────┐
+                        │ Save Artifacts       │
+                        │ • model.pkl          │
+                        │ • feature_names.json │
+                        │ • model_params.json  │
+                        └──────────────────────┘
+
+
+                    STAGE 4: INFERENCE
+                    ═════════════════════
+
+    Test Data Points
+            │
+            ▼
+    ┌──────────────────────────────────────┐
+    │  Load Trained Model                  │
+    │  Load Feature Names                  │
+    └──────────────────────────────────────┘
+            │
+            ├─────────────────────────────────────┐
+        # Architecture and Data Flow (Local-First)
+
+        ## System Architecture
+
+        ```
+        ┌──────────────────────────────────────────────┐
+        │         LOCAL DEVELOPMENT (Jupyter)          │
+        ├──────────────────────────────────────────────┤
+        │  01. Data Generation → Parquet               │
+        │  02. Feature Engineering → Parquet/JSON      │
+        │  03. Model Training → model.pkl + features   │
+        │      MLflow tracking (file:./mlruns)         │
+        └──────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────┐
+        │          DOCKER (FastAPI + Uvicorn)          │
+        ├──────────────────────────────────────────────┤
+        │  • Mount model artifacts to /app/model       │
+        │  • Serve REST endpoints on port 5000         │
+        │  • /health, /info, /predict*, /metrics       │
+        └──────────────────────────────────────────────┘
+                               │
+                     Optional push to ECR
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────┐
+        │         KUBERNETES (Minikube)                │
+        ├──────────────────────────────────────────────┤
+        │  • Deployment + NodePort Service (30080)     │
+        │  • Port-forward or use Minikube IP           │
+        │  • Horizontal scaling possible               │
+        └──────────────────────────────────────────────┘
+        ```
+
+        ## Data Flow
+
+        ```
+        YAML Config → Notebooks → Artifacts (pkl/json/parquet)
+                  → Docker Build → Container (FastAPI)
+                  → Optional ECR → Minikube Service → Clients
+        ```
+
+        ## Components
+
+        - Configuration: [config/model_config.yaml](config/model_config.yaml)
+        - Notebooks: [notebooks](notebooks)
+        - Source: [src/config.py](src/config.py), [src/utils.py](src/utils.py), [src/model.py](src/model.py)
+        - Docker App: [docker/app.py](docker/app.py), [docker/Dockerfile](docker/Dockerfile)
+        - Kubernetes: [k8s/deployment.yaml](k8s/deployment.yaml), [k8s/service.yaml](k8s/service.yaml)
+        - Scripts: [scripts](scripts)
+
+        ## Endpoints
+
+        - GET `/health` — status + feature count
+        - GET `/api/v1/info` — model info
+        - POST `/api/v1/predict` — single
+        - POST `/api/v1/predict_batch` — batch
+        - POST `/api/v1/predict_dataframe` — DataFrame JSON
+        - GET `/metrics` — Prometheus
+        - Docs: `/docs`, `/redoc`
+
+        ## Scalability
+        - Run multiple replicas behind a Service/Ingress
+        - Increase workers or resources per pod
+        - External registry optional for production
+
+        ---
+
+        Local-first architecture; extend to cloud as needed.
+        └──────────────────────────────┘
