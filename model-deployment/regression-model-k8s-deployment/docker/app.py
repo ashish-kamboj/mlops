@@ -41,6 +41,10 @@ from pydantic import BaseModel, Field, validator
 from contextlib import asynccontextmanager
 import uvicorn
 
+# Prometheus metrics
+from prometheus_client import Counter, Histogram, Gauge, REGISTRY, CollectorRegistry, CONTENT_TYPE_LATEST
+from prometheus_client import generate_latest as prometheus_generate_latest
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -48,18 +52,66 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ============================================================================
+# Prometheus Metrics Definition
+# ============================================================================
+
+# Counters (monotonically increasing)
+inference_requests_total = Counter(
+    'model_inference_requests_total',
+    'Total number of inference requests',
+    ['status']  # labels: success, error
+)
+
+inference_predictions_total = Counter(
+    'model_inference_predictions_total',
+    'Total number of predictions made',
+)
+
+inference_errors_total = Counter(
+    'model_inference_errors_total',
+    'Total number of inference errors',
+    ['error_type']  # labels: validation, runtime, etc.
+)
+
+# Histograms (measure request latency)
+inference_latency = Histogram(
+    'model_inference_latency_seconds',
+    'Request latency in seconds',
+    buckets=(0.001, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0)
+)
+
+# Gauges (current state)
+model_loaded = Gauge(
+    'model_loaded',
+    'Whether model is currently loaded',
+)
+
+features_count = Gauge(
+    'model_features_count',
+    'Number of model features',
+)
+
+predictions_per_second = Gauge(
+    'model_throughput_per_sec',
+    'Current throughput in predictions per second',
+)
+
+
+
+
+
 # Global variables
 MODEL = None
 FEATURE_NAMES = None
 MODEL_VERSION = os.getenv('MODEL_VERSION', '1.0')
 MODEL_METADATA = {}
+STARTUP_TIME = time.time()
 
 
 # ============================================================================
 # Data Models for Request/Response Validation
 # ============================================================================
-
-class PredictionRequest(BaseModel):
     """Single sample prediction request."""
     features: List[float] = Field(..., description="Feature values for prediction")
     request_id: Optional[str] = Field(default=None, description="Optional request identifier")
@@ -112,76 +164,6 @@ class BatchPredictionResponse(BaseModel):
 
 
 # ============================================================================
-# Metrics Collection
-# ============================================================================
-
-class MetricsCollector:
-    """Collect and aggregate inference metrics."""
-    
-    def __init__(self):
-        """Initialize metrics collector."""
-        self.total_requests = 0
-        self.total_predictions = 0
-        self.total_errors = 0
-        self.total_latency_ms = 0.0
-        self.start_time = time.time()
-    
-    def record_request(self, num_predictions: int, latency_ms: float, 
-                      error: bool = False) -> None:
-        """Record inference request metrics."""
-        self.total_requests += 1
-        self.total_predictions += num_predictions
-        self.total_latency_ms += latency_ms
-        if error:
-            self.total_errors += 1
-    
-    def get_metrics(self) -> Dict[str, Any]:
-        """Get current metrics."""
-        uptime_sec = time.time() - self.start_time
-        
-        return {
-            'uptime_seconds': uptime_sec,
-            'total_requests': self.total_requests,
-            'total_predictions': self.total_predictions,
-            'total_errors': self.total_errors,
-            'error_rate': self.total_errors / max(1, self.total_requests),
-            'avg_latency_ms': (self.total_latency_ms / max(1, self.total_requests)),
-            'predictions_per_sec': self.total_predictions / max(1, uptime_sec)
-        }
-    
-    def get_prometheus_metrics(self) -> str:
-        """Get metrics in Prometheus format."""
-        metrics = self.get_metrics()
-        
-        lines = [
-            "# HELP model_inference_requests_total Total inference requests",
-            "# TYPE model_inference_requests_total counter",
-            f"model_inference_requests_total {metrics['total_requests']}",
-            "",
-            "# HELP model_inference_predictions_total Total predictions",
-            "# TYPE model_inference_predictions_total counter",
-            f"model_inference_predictions_total {metrics['total_predictions']}",
-            "",
-            "# HELP model_inference_errors_total Total inference errors",
-            "# TYPE model_inference_errors_total counter",
-            f"model_inference_errors_total {metrics['total_errors']}",
-            "",
-            "# HELP model_inference_latency_ms Average latency",
-            "# TYPE model_inference_latency_ms gauge",
-            f"model_inference_latency_ms {metrics['avg_latency_ms']:.2f}",
-            "",
-            "# HELP model_inference_throughput_per_sec Predictions per second",
-            "# TYPE model_inference_throughput_per_sec gauge",
-            f"model_inference_throughput_per_sec {metrics['predictions_per_sec']:.2f}",
-        ]
-        
-        return "\n".join(lines)
-
-
-metrics_collector = MetricsCollector()
-
-
-# ============================================================================
 # Model Loading and Setup
 # ============================================================================
 
@@ -207,8 +189,13 @@ def load_model_and_features():
             with open(metadata_path, 'r') as f:
                 MODEL_METADATA = json.load(f)
         
+        # Update Prometheus gauges
+        model_loaded.set(1)
+        features_count.set(len(FEATURE_NAMES))
+        
     except Exception as e:
         logger.error(f"Error loading model: {str(e)}")
+        model_loaded.set(0)
         raise
 
 
@@ -305,14 +292,14 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
     request_id = request.request_id or f"req_{int(time.time() * 1000)}"
     
     try:
-        # Make prediction
-        start_time = time.time()
-        features_array = np.array(request.features).reshape(1, -1)
-        prediction = MODEL.predict(features_array)[0]
-        latency_ms = (time.time() - start_time) * 1000
+        # Make prediction with latency tracking
+        with inference_latency.time():
+            features_array = np.array(request.features).reshape(1, -1)
+            prediction = MODEL.predict(features_array)[0]
         
         # Record metrics
-        metrics_collector.record_request(1, latency_ms)
+        inference_requests_total.labels(status='success').inc()
+        inference_predictions_total.inc()
         
         logger.info(f"Prediction successful - Request: {request_id}, Value: {prediction:.4f}")
         
@@ -326,7 +313,8 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
     
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
-        metrics_collector.record_request(1, 0, error=True)
+        inference_requests_total.labels(status='error').inc()
+        inference_errors_total.labels(error_type='runtime').inc()
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 
@@ -344,12 +332,13 @@ async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionRespo
     request_id = request.request_id or f"batch_{int(time.time() * 1000)}"
     
     try:
-        start_time = time.time()
-        features_array = np.array(request.features)
-        predictions = MODEL.predict(features_array)
-        latency_ms = (time.time() - start_time) * 1000
+        with inference_latency.time():
+            features_array = np.array(request.features)
+            predictions = MODEL.predict(features_array)
         
-        metrics_collector.record_request(len(predictions), latency_ms)
+        # Record metrics
+        inference_requests_total.labels(status='success').inc()
+        inference_predictions_total.inc(len(predictions))
         
         logger.info(f"Batch prediction successful - Request: {request_id}, Count: {len(predictions)}")
         
@@ -364,7 +353,8 @@ async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionRespo
     
     except Exception as e:
         logger.error(f"Batch prediction failed: {e}")
-        metrics_collector.record_request(len(request.features), 0, error=True)
+        inference_requests_total.labels(status='error').inc()
+        inference_errors_total.labels(error_type='runtime').inc()
         raise HTTPException(status_code=500, detail=f"Batch prediction failed: {str(e)}")
 
 
@@ -381,11 +371,12 @@ async def predict_dataframe(request: DataFramePredictionRequest) -> BatchPredict
         df = df[FEATURE_NAMES]
         
         # Make predictions
-        start_time = time.time()
-        predictions = MODEL.predict(df.values)
-        latency_ms = (time.time() - start_time) * 1000
+        with inference_latency.time():
+            predictions = MODEL.predict(df.values)
         
-        metrics_collector.record_request(len(predictions), latency_ms)
+        # Record metrics
+        inference_requests_total.labels(status='success').inc()
+        inference_predictions_total.inc(len(predictions))
         
         logger.info(f"DataFrame prediction successful - Request: {request_id}, Rows: {len(df)}")
         
@@ -400,20 +391,31 @@ async def predict_dataframe(request: DataFramePredictionRequest) -> BatchPredict
     
     except Exception as e:
         logger.error(f"DataFrame prediction failed: {e}")
-        metrics_collector.record_request(len(request.data), 0, error=True)
+        inference_requests_total.labels(status='error').inc()
+        inference_errors_total.labels(error_type='runtime').inc()
         raise HTTPException(status_code=500, detail=f"DataFrame prediction failed: {str(e)}")
 
 
 @app.get('/metrics', tags=["Monitoring"])
 async def get_metrics() -> PlainTextResponse:
     """Get Prometheus-format metrics."""
-    return PlainTextResponse(metrics_collector.get_prometheus_metrics())
+    return PlainTextResponse(
+        prometheus_generate_latest(REGISTRY).decode('utf-8'),
+        media_type='text/plain; version=0.0.4'
+    )
 
 
 @app.get('/metrics/json', tags=["Monitoring"])
 async def get_metrics_json() -> Dict[str, Any]:
-    """Get metrics as JSON."""
-    return metrics_collector.get_metrics()
+    """Get metrics summary as JSON."""
+    uptime_sec = time.time() - STARTUP_TIME
+    return {
+        'uptime_seconds': round(uptime_sec, 2),
+        'model_loaded': bool(MODEL is not None),
+        'model_version': MODEL_VERSION,
+        'features_count': len(FEATURE_NAMES) if FEATURE_NAMES else 0,
+        'timestamp': datetime.utcnow().isoformat()
+    }
 
 
 @app.get('/', tags=["Root"])
