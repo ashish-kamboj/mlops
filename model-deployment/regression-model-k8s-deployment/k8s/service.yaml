@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: regression-model-service
   namespace: default
+  labels:
+    app: regression-model
+    prometheus: kube-prometheus
 spec:
   type: NodePort
   selector:
@@ -11,3 +14,4 @@ spec:
     - port: 5000
       targetPort: 5000
       nodePort: 30080
+      name: http
