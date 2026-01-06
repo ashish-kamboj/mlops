@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: regression-model-deployment
   namespace: default
+  labels:
+    app: regression-model
+    prometheus: kube-prometheus
 spec:
   replicas: 1
   selector:
@@ -12,6 +15,10 @@ spec:
     metadata:
       labels:
         app: regression-model
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: fastapi-server
@@ -19,6 +26,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
+              name: http
           env:
             - name: API_HOST
               value: "0.0.0.0"
@@ -30,9 +38,32 @@ spec:
               value: "/output/modeling/feature_names.json"
             - name: METADATA_PATH
               value: "/output/modeling/model_params.json"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           volumeMounts:
             - name: output-volume
               mountPath: /output
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
       volumes:
         - name: output-volume
           hostPath:
