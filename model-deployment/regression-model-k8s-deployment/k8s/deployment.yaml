@@ -22,8 +22,8 @@ spec:
     spec:
       containers:
         - name: fastapi-server
-          image: regression-model-inference:latest
-          imagePullPolicy: IfNotPresent
+          image: regression-model-inference:v2
+          imagePullPolicy: Never
           ports:
             - containerPort: 5000
               name: http
