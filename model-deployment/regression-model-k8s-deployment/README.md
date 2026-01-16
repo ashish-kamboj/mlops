@@ -979,10 +979,6 @@ To extend this project:
 3. Add new API endpoints in `docker/app.py`
 4. Update configuration schema in `config/model_config.yaml`
 
-## 📝 License
-
-This project is provided as-is for educational and demonstration purposes.
-
 ## ❓ Questions & Support
 
 For issues or questions:
