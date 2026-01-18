@@ -35,8 +35,9 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field, validator
 from contextlib import asynccontextmanager
 import uvicorn
@@ -97,8 +98,10 @@ predictions_per_second = Gauge(
     'Current throughput in predictions per second',
 )
 
-
-
+# Initialize error counter with labels to make them visible in Prometheus
+# This ensures the metric exists even with 0 errors
+inference_errors_total.labels(error_type='validation')
+inference_errors_total.labels(error_type='runtime')
 
 
 # Global variables
@@ -112,6 +115,7 @@ STARTUP_TIME = time.time()
 # ============================================================================
 # Data Models for Request/Response Validation
 # ============================================================================
+class PredictionRequest(BaseModel):
     """Single sample prediction request."""
     features: List[float] = Field(..., description="Feature values for prediction")
     request_id: Optional[str] = Field(default=None, description="Optional request identifier")
@@ -434,9 +438,29 @@ async def root() -> Dict[str, str]:
 # Error Handlers
 # ============================================================================
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle Pydantic validation errors and count them as errors."""
+    # Increment error counter for validation errors
+    inference_errors_total.labels(error_type='validation').inc()
+    
+    logger.warning(f"Validation error: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": "Validation error",
+            "errors": exc.errors()
+        }
+    )
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     """Handle HTTP exceptions."""
+    # Count 400-level errors as validation errors
+    if 400 <= exc.status_code < 500:
+        inference_errors_total.labels(error_type='validation').inc()
+    
     logger.error(f"HTTP error: {exc.status_code} - {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
