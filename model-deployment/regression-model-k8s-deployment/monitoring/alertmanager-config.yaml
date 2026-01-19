@@ -1,0 +1,115 @@
+# AlertManager Configuration for ML Model Alerts
+# This file defines how alerts are routed and where they're sent
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-custom-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      
+    # Templates for alert messages
+    templates:
+      - '/etc/alertmanager/config/notification.tmpl'
+
+    route:
+      # Group alerts by these labels
+      group_by: ['alertname', 'job', 'severity']
+      
+      # Wait this long before sending notifications
+      group_wait: 10s
+      
+      # Send updates about grouped alerts at this interval
+      group_interval: 10s
+      
+      # Alert reminder interval (how often to resend)
+      repeat_interval: 12h
+      
+      # Default receiver (no Slack configured, so use null)
+      receiver: 'default'
+      
+      # Route configuration by severity
+      routes:
+        # Critical alerts go to critical receiver
+        - match:
+            severity: critical
+          receiver: 'critical'
+          group_wait: 0s
+          repeat_interval: 1h
+        
+        # Warning alerts go to default receiver
+        - match:
+            severity: warning
+          receiver: 'default'
+          group_wait: 30s
+          repeat_interval: 4h
+        
+        # Info alerts have longer repeat intervals
+        - match:
+            severity: info
+          receiver: 'default'
+          repeat_interval: 24h
+
+    receivers:
+      - name: 'default'
+        # Currently no webhook configured - just uses default handling
+        # For local testing, you can add:
+        # webhook_configs:
+        #   - url: 'http://localhost:5000/webhooks/alerts'
+        #     send_resolved: true
+      
+      - name: 'critical'
+        # Critical alerts could have special handling
+        # In production, integrate with:
+        # - Slack: slack_configs with api_url
+        # - PagerDuty: pagerduty_configs with service_key
+        # - Email: email_configs with to, from, smarthost
+        # For now, same as default (you can configure later)
+        
+        # Example Slack configuration (uncomment to use):
+        # slack_configs:
+        #   - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+        #     channel: '#alerts-critical'
+        #     title: 'Critical Alert: {{ .GroupLabels.alertname }}'
+        #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        #     send_resolved: true
+
+    # Inhibition rules (silence certain alerts under conditions)
+    inhibit_rules:
+      # Don't alert on high latency if the pod is down
+      - source_match:
+          severity: 'critical'
+          alertname: 'MLModelPodDown'
+        target_match:
+          severity: 'warning'
+        equal: ['job']
+      
+      # Don't alert on restarts if the pod is down
+      - source_match:
+          severity: 'critical'
+          alertname: 'MLModelPodDown'
+        target_match:
+          alertname: 'MLModelPodRestarting'
+        equal: ['pod']
+
+---
+# Alert notification template
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-templates
+  namespace: monitoring
+data:
+  notification.tmpl: |
+    {{ define "slack.default.title" -}}
+    [{{ .GroupLabels.severity | toUpper }}] {{ .GroupLabels.alertname }}
+    {{- end }}
+    
+    {{ define "slack.default.text" -}}
+    {{ range .Alerts -}}
+    {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
+    {{ end }}
+    {{- end }}
