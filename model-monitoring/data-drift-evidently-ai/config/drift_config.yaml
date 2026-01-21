@@ -1,0 +1,102 @@
+# Data Drift Configuration for Evidently AI
+# This configuration file controls all aspects of data drift detection
+
+# General Settings
+general:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: 'INFO'
+
+# Databricks Unity Catalog Settings
+databricks:
+  # Catalog name in Unity Catalog
+  catalog: 'data_catalog'
+  # Schema/Database name
+  schema: 'outputs'
+  # Tables to monitor for drift (list)
+  tables:
+    - name: 'customer_data'
+      # Column configuration: 'all' to use all columns, or specify list
+      columns: 'all'  # or ['age', 'income', 'region']
+    
+    - name: 'product_sales'
+      columns: ['product_category', 'price', 'quantity', 'revenue']
+    
+    - name: 'user_behavior'
+      columns: 'all'
+
+# Statistical Tests Configuration
+statistical_tests:
+  # Numerical column tests (multiple tests can be specified)
+  numerical:
+    # Available tests: 'ks' (Kolmogorov-Smirnov), 'wasserstein', 'kl_div' (Kullback-Leibler), 
+    # 'psi' (Population Stability Index), 'jensenshannon', 'anderson', 'cramer_von_mises', 't_test'
+    tests:
+      - 'ks'  # Kolmogorov-Smirnov test
+      - 'wasserstein'  # Wasserstein distance
+    # Threshold for drift detection (p-value for hypothesis tests, distance for distance metrics)
+    threshold: 0.05
+  
+  # Categorical column tests (multiple tests can be specified)
+  categorical:
+    # Available tests: 'chisquare', 'jensenshannon', 'psi', 'kl_div', 'wasserstein', 'hellinger', 'z'
+    tests:
+      - 'chisquare'  # Chi-square test
+      - 'jensenshannon'  # Jensen-Shannon divergence
+    # Threshold for drift detection
+    threshold: 0.05
+
+## Unity Catalog version history is used; no config needed
+
+# Report Output Settings
+output:
+  # Report formats: 'html', 'json', or both
+  formats:
+    - 'html'
+    - 'json'
+  
+  # Azure Data Lake Storage (ADLS) settings
+  adls:
+    enabled: false
+    # ADLS Gen2 storage account details
+    storage_account: 'your_storage_account'
+    container: 'drift-reports'
+    # Path within container
+    base_path: 'data-drift'
+    # Authentication method: 'service_principal' or 'access_key'
+    auth_method: 'service_principal'
+    # Service Principal credentials (for auth_method: 'service_principal')
+    tenant_id: '${AZURE_TENANT_ID}'  # Use environment variable
+    client_id: '${AZURE_CLIENT_ID}'  # Use environment variable
+    client_secret: '${AZURE_CLIENT_SECRET}'  # Use environment variable
+    # Access key (for auth_method: 'access_key')
+    access_key: '${AZURE_STORAGE_KEY}'  # Use environment variable
+
+# Drift Detection Settings
+drift_detection:
+  # Confidence level for statistical tests
+  confidence_level: 0.95
+  # Minimum number of records required for drift detection
+  min_sample_size: 100
+  # Handle missing values: 'drop', 'keep', 'fill'
+  missing_values_strategy: 'keep'
+  # Column drift threshold (percentage of columns drifted to flag table-level drift)
+  column_drift_threshold: 0.3  # 30% of columns
+  
+# Data Sampling (for large datasets)
+sampling:
+  # Enable sampling for large datasets
+  enabled: false
+  # Sample size or fraction
+  method: 'fraction'  # 'fraction' or 'fixed'
+  fraction: 0.1  # 10% of data
+  fixed_size: 10000  # or fixed number of rows
+  # Random seed for reproducibility
+  random_seed: 42
+
+# Alerting (optional - for future enhancement)
+alerting:
+  enabled: false
+  # Notification channels: 'email', 'slack', 'teams'
+  channels: []
+  # Drift threshold to trigger alert
+  alert_threshold: 0.5  # Alert when 50% of columns show drift
