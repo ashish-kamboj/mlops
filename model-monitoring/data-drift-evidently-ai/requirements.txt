@@ -1,0 +1,31 @@
+# Data Drift Detection Requirements
+# Core dependencies for Evidently AI-based drift detection
+# Updated with latest stable versions as of January 2026
+
+# Evidently AI for drift detection (latest stable)
+evidently==0.7.19
+
+# Data processing
+pandas==2.2.3
+numpy==2.2.1
+
+# PySpark (for Databricks)
+pyspark==3.5.3
+
+# Azure Storage (for ADLS integration)
+azure-storage-file-datalake==12.20.0
+azure-identity==1.19.0
+
+# Configuration management
+pyyaml==6.0.2
+
+# Utilities
+python-dateutil==2.9.0
+
+# Jupyter/Databricks notebook support
+ipython==8.31.0
+ipykernel==6.29.5
+
+# Optional: Plotting and visualization
+plotly==5.24.1
+matplotlib==3.10.0
