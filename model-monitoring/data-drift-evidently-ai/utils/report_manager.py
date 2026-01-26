@@ -20,7 +20,7 @@ class ReportManager:
     """
     
     # Default local base path for saving reports
-    DEFAULT_LOCAL_BASE_PATH = '/Workspace/Users/ashu.009kamboj@gmail.com/data-drift-evidently-ai/reports'
+    DEFAULT_LOCAL_BASE_PATH = '/Workspace/Users/<<USER_ID>>/data-drift-evidently-ai/reports'
 
     def __init__(self, config_manager):
         """
