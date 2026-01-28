@@ -51,9 +51,9 @@ data-drift-evidently-ai/
 │   ├── data_loader.py              # Data loading from Unity Catalog
 │   └── logger_setup.py             # Logging configuration
 ├── notebooks/
-│   ├── 01_generate_dummy_data.ipynb        # Test data generation
-│   ├── 02_drift_detection_python.ipynb    # Python/Pandas version
-│   └── 03_drift_detection_pyspark.ipynb   # PySpark version
+│   ├── 01_generate_dummy_data.py          # Test data generation
+│   ├── 02_drift_detection_python.py       # Python/Pandas version
+│   └── 03_drift_detection_pyspark.py      # PySpark version
 ├── reports/                        # Local report output directory
 │   ├── html/                       # HTML reports
 │   └── json/                       # JSON reports
@@ -178,7 +178,7 @@ Run the data generation notebook to create sample tables with drift:
 
 ```python
 # In Databricks notebook
-%run /Workspace/Repos/<your-repo>/notebooks/01_generate_dummy_data
+%run /Workspace/Repos/<your-repo>/notebooks/01_generate_dummy_data.py
 ```
 
 This creates three tables with two versions each (accessible via Unity Catalog history):
@@ -192,7 +192,7 @@ This creates three tables with two versions each (accessible via Unity Catalog h
 
 ```python
 # In Databricks notebook
-%run /Workspace/Repos/<your-repo>/notebooks/02_drift_detection_python
+%run /Workspace/Repos/<your-repo>/notebooks/02_drift_detection_python.py
 ```
 
 **Best for:**
@@ -204,7 +204,7 @@ This creates three tables with two versions each (accessible via Unity Catalog h
 
 ```python
 # In Databricks notebook
-%run /Workspace/Repos/<your-repo>/notebooks/03_drift_detection_pyspark
+%run /Workspace/Repos/<your-repo>/notebooks/03_drift_detection_pyspark.py
 ```
 
 **Best for:**
@@ -304,9 +304,9 @@ Each table analysis produces:
 - QUICK_REFERENCE.md: Commands and configuration at a glance.
 
 ## 🔗 Quick Links
-  - 01 Generate Dummy Data: [notebooks/01_generate_dummy_data.ipynb](notebooks/01_generate_dummy_data.ipynb)
-  - 02 Drift Detection (Python): [notebooks/02_drift_detection_python.ipynb](notebooks/02_drift_detection_python.ipynb)
-  - 03 Drift Detection (PySpark): [notebooks/03_drift_detection_pyspark.ipynb](notebooks/03_drift_detection_pyspark.ipynb)
+  - 01 Generate Dummy Data: [notebooks/01_generate_dummy_data.py](notebooks/01_generate_dummy_data.py)
+  - 02 Drift Detection (Python): [notebooks/02_drift_detection_python.py](notebooks/02_drift_detection_python.py)
+  - 03 Drift Detection (PySpark): [notebooks/03_drift_detection_pyspark.py](notebooks/03_drift_detection_pyspark.py)
   - CLI runner: [drift_detection_script.py](drift_detection_script.py)
 ## ▶️ Run This
 
@@ -314,13 +314,13 @@ Run in Databricks notebooks (recommended):
 
 ```python
 # Generate dummy data
-%run ./notebooks/01_generate_dummy_data
+%run ./notebooks/01_generate_dummy_data.py
 
 # Python/Pandas workflow (small-medium tables)
-%run ./notebooks/02_drift_detection_python
+%run ./notebooks/02_drift_detection_python.py
 
 # PySpark workflow (large tables)
-%run ./notebooks/03_drift_detection_pyspark
+%run ./notebooks/03_drift_detection_pyspark.py
 ```
 
 Run the CLI (cluster or local with Spark available):
@@ -503,7 +503,6 @@ Output (Local / ADLS)
 ### Azure Resources
 - [ADLS Gen2](https://docs.microsoft.com/azure/storage/blobs/data-lake-storage-introduction)
 - [Azure Python SDK](https://docs.microsoft.com/python/api/overview/azure/storage-file-datalake-readme)
-
 
 ## 🙋 Support
 
