@@ -2,7 +2,7 @@
 
 A comprehensive, production-ready solution for detecting data drift in Databricks Unity Catalog using Evidently AI. This project provides configurable drift detection with support for both Python/Pandas and PySpark implementations.
 
-## 🎯 Features
+## Features
 
 ### Core Capabilities
 - ✅ **Multiple Statistical Tests**: Configure various tests for numerical and categorical columns
@@ -62,7 +62,7 @@ data-drift-evidently-ai/
 └── README.md                       # This file
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -98,7 +98,7 @@ data-drift-evidently-ai/
    - Update catalog, schema, and table names
    - Configure statistical tests and output settings
 
-## ⚙️ Configuration
+## Configuration
 
 ### Main Configuration File: `config/drift_config.yaml`
 
@@ -265,7 +265,7 @@ Each table analysis produces:
 - **No Drift (✓)**: Data distributions remain stable
 - **Drift Detected (⚠️)**: Significant changes in data distribution
 
-## 🔧 Architecture Overview
+## Architecture Overview
 - Input: YAML config + Unity Catalog tables (latest and previous via UC History)
 - Processing:
   - `ConfigManager`: loads/validates config and provides accessors
@@ -275,18 +275,18 @@ Each table analysis produces:
   - Logging: console always; ADLS log handler when enabled
 - Output: Local `reports/html` and `reports/json` by default; optional ADLS upload under `<base_path>/<format>/...`
 
-## 🔄 Versioning via Unity Catalog
+## Versioning via Unity Catalog
 - No version columns required; the loader fetches latest two versions via UC History.
 - Reads data with `SELECT * FROM <catalog.schema.table> VERSION AS OF <n>`.
 - Works identically in notebooks and the script.
 
-## 📦 Version Update (Evidently 0.7.19)
+## Version Update (Evidently 0.7.19)
 - Imports: use `evidently.metrics` (e.g., `DatasetDriftMetric`, `DataDriftTable`, `ColumnDriftMetric`); remove legacy TestSuite/tests.
 - Report creation: metrics list provided at construction time; no post-append.
 - HTML: use `report.show(mode='inline').data` with fallback to `get_html()` or `save_html()`.
 - Dependencies pinned (examples): Evidently 0.7.19, pandas 2.2.3, numpy 2.2.1, pyspark 3.5.3, pyyaml 6.0.2, azure-storage-file-datalake 12.20.0, azure-identity 1.19.0.
 
-## 🧪 Troubleshooting (Quick)
+## Troubleshooting (Quick)
 - Module not found: ensure project path added in notebook; upload `utils` to workspace.
 - Config not found: use absolute workspace path for `drift_config.yaml`.
 - Table not found: verify `catalog.schema.table` exists (`SHOW TABLES`).
@@ -294,16 +294,16 @@ Each table analysis produces:
 - ADLS auth: verify service principal credentials and container/base path.
 - Memory pressure: enable sampling in config or use PySpark notebook.
 
-## ⚙️ Performance Notes
+## Performance Notes
 - Python: good for < 1M rows; fast iteration and testing.
 - PySpark: recommended for larger datasets; supports sampling; distributed execution.
 
-## 📚 Documentation
+## Documentation
 - README.md: Full guide, architecture, versioning via Unity Catalog, troubleshooting.
 - SETUP.md: 5‑minute quick start for Databricks with install and run steps.
 - QUICK_REFERENCE.md: Commands and configuration at a glance.
 
-## 🔗 Quick Links
+## Quick Links
   - 01 Generate Dummy Data: [notebooks/01_generate_dummy_data.py](notebooks/01_generate_dummy_data.py)
   - 02 Drift Detection (Python): [notebooks/02_drift_detection_python.py](notebooks/02_drift_detection_python.py)
   - 03 Drift Detection (PySpark): [notebooks/03_drift_detection_pyspark.py](notebooks/03_drift_detection_pyspark.py)
@@ -352,7 +352,7 @@ python drift_detection_script.py --config config/drift_config.yaml --dry-run
    - Missing data handling changes
    - Data source changes
 
-## 🔧 Customization
+## Customization
 
 ### Adding New Tables
 
@@ -459,7 +459,7 @@ ReportManager (generates reports)
 Output (Local / ADLS)
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -488,7 +488,7 @@ Output (Local / ADLS)
    - Ensure data has version information
    - Check for typos in column names
 
-## 📚 References
+## References
 
 ### Evidently AI Documentation
 - [Evidently AI Official Docs](https://docs.evidentlyai.com/introduction)
@@ -504,7 +504,7 @@ Output (Local / ADLS)
 - [ADLS Gen2](https://docs.microsoft.com/azure/storage/blobs/data-lake-storage-introduction)
 - [Azure Python SDK](https://docs.microsoft.com/python/api/overview/azure/storage-file-datalake-readme)
 
-## 🙋 Support
+## Support
 
 For issues or questions:
 1. Check troubleshooting section
