@@ -3,11 +3,11 @@ name: CI/CD Pipeline - Databricks Sync
 on:
   push:
     branches:
-      - develop
+      - dev
       - main
   pull_request:
     branches:
-      - develop
+      - dev
       - main
 
 env:
@@ -34,6 +34,8 @@ jobs:
           pip install pytest pyyaml pandas scikit-learn numpy
           
       - name: Run unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest tests/ -v --tb=short
           
@@ -47,6 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push'  # Only sync on pushes, not PRs
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
     
     steps:
       - name: Checkout code
@@ -66,25 +71,28 @@ jobs:
           
       - name: Configure Databricks CLI
         run: |
-          mkdir -p ~/.databrickscfg
           echo "[DEFAULT]" > ~/.databrickscfg
           echo "host = ${{ secrets.DATABRICKS_HOST }}" >> ~/.databrickscfg
           echo "token = ${{ secrets.DATABRICKS_TOKEN }}" >> ~/.databrickscfg
           chmod 600 ~/.databrickscfg
           
+      - name: Verify Databricks credentials
+        run: |
+          if [ -z "${{ secrets.DATABRICKS_HOST }}" ] || [ -z "${{ secrets.DATABRICKS_TOKEN }}" ]; then
+            echo "ERROR: Databricks secrets are not set!"
+            echo "Please add DATABRICKS_HOST and DATABRICKS_TOKEN secrets to GitHub"
+            exit 1
+          fi
+          echo "✓ Databricks credentials verified"
+          
       - name: Determine target workspace path
         id: target_path
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "workspace_path=/Repos/prod/ml-regression-model" >> $GITHUB_OUTPUT
+            echo "workspace_path=/ml-regression-model-prod" >> $GITHUB_OUTPUT
           else
-            echo "workspace_path=/Repos/develop/ml-regression-model" >> $GITHUB_OUTPUT
+            echo "workspace_path=/ml-regression-model-dev" >> $GITHUB_OUTPUT
           fi
-          
-      - name: Create workspace directory structure
-        run: |
-          # Try to create workspace directory (it may already exist)
-          databricks workspace mkdirs "${{ steps.target_path.outputs.workspace_path }}" || true
           
       - name: Upload repository files to Databricks
         run: |
@@ -105,6 +113,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push'
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
     
     steps:
       - name: Checkout code
@@ -124,19 +135,27 @@ jobs:
           
       - name: Configure Databricks CLI
         run: |
-          mkdir -p ~/.databrickscfg
           echo "[DEFAULT]" > ~/.databrickscfg
           echo "host = ${{ secrets.DATABRICKS_HOST }}" >> ~/.databrickscfg
           echo "token = ${{ secrets.DATABRICKS_TOKEN }}" >> ~/.databrickscfg
           chmod 600 ~/.databrickscfg
           
+      - name: Verify Databricks credentials
+        run: |
+          if [ -z "${{ secrets.DATABRICKS_HOST }}" ] || [ -z "${{ secrets.DATABRICKS_TOKEN }}" ]; then
+            echo "ERROR: Databricks secrets are not set!"
+            echo "Please add DATABRICKS_HOST and DATABRICKS_TOKEN secrets to GitHub"
+            exit 1
+          fi
+          echo "✓ Databricks credentials verified"
+          
       - name: Determine target workspace path
         id: target_path
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "workspace_path=/Repos/prod/ml-regression-model" >> $GITHUB_OUTPUT
+            echo "workspace_path=/ml-regression-model-prod" >> $GITHUB_OUTPUT
           else
-            echo "workspace_path=/Repos/develop/ml-regression-model" >> $GITHUB_OUTPUT
+            echo "workspace_path=/ml-regression-model-dev" >> $GITHUB_OUTPUT
           fi
           
       - name: Remove deleted files from Databricks
