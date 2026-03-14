@@ -1,0 +1,6 @@
+{
+  "categories": {
+    "grocery": ["G1","G2","G3","G4"],
+    "fashion": ["F1","F2","F3"]
+  }
+}
