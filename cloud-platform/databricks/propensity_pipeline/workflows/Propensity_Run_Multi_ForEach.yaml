@@ -1,0 +1,45 @@
+resources:
+  jobs:
+    Propensity_Run_Multi_ForEach:
+      name: Propensity_Run_Multi_ForEach
+      tasks:
+        - task_key: Feature_Engineering
+          notebook_task:
+            notebook_path: /Workspace/Users/<<USER_NAME>>/propensity_pipeline_multi_foreach/notebooks/01_feature_engineering1
+            source: WORKSPACE
+        - task_key: Modeling_1
+          depends_on:
+            - task_key: Feature_Engineering
+          for_each_task:
+            inputs: "{{tasks.Feature_Engineering.values.batch1}}"
+            concurrency: 4
+            task:
+              task_key: Modeling_1_iteration
+              notebook_task:
+                notebook_path: /Workspace/Users/<<USER_NAME>>/propensity_pipeline_multi_foreach/notebooks/02_brand_pipeline
+                base_parameters:
+                  brand_batch_config: "{{input}}"
+                source: WORKSPACE
+        - task_key: Modeling_2
+          depends_on:
+            - task_key: Feature_Engineering
+          for_each_task:
+            inputs: "{{tasks.Feature_Engineering.values.batch2}}"
+            concurrency: 4
+            task:
+              task_key: Modeling_2_iteration
+              notebook_task:
+                notebook_path: /Workspace/Users/<<USER_NAME>>/propensity_pipeline_multi_foreach/notebooks/02_brand_pipeline
+                base_parameters:
+                  brand_batch_config: "{{input}}"
+                source: WORKSPACE
+        - task_key: Result_insert
+          depends_on:
+            - task_key: Modeling_1
+            - task_key: Modeling_2
+          notebook_task:
+            notebook_path: /Workspace/Users/<<USER_NAME>>/propensity_pipeline_multi_foreach/notebooks/03_merge_results
+            source: WORKSPACE
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED
